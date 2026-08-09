@@ -1,0 +1,60 @@
+/* Tibetan-compatible Unicode font (Google Fonts, self-hosted fallback if offline) */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tibetan:wght@400;500;700&family=Baloo+2:wght@400;600;800&display=swap');
+@import "tailwindcss";
+
+/*
+  Centralized design tokens.
+  Do not scatter colors/fonts through components — reference these via
+  Tailwind's `bg-primary`, `text-adventure`, `font-tibetan`, etc.
+  See docs/design-system.md for rationale.
+*/
+@theme {
+  --color-primary: #4cad50;
+  --color-primary-dark: #388e3c;
+  --color-adventure: #ffb300;
+  --color-adventure-dark: #e6a000;
+  --color-sky: #2196f3;
+  --color-leaf: #8bc34a;
+  --color-cream: #fff3d0;
+  --color-cream-dark: #ffe9a8;
+  --color-sky-light: #e1f5fe;
+  --color-ink: #263238;
+  --color-treasure: #d4a017;
+  --color-correct: #43a047;
+  --color-incorrect: #e5533d;
+
+  --font-tibetan: 'Noto Sans Tibetan', 'Noto Serif Tibetan', sans-serif;
+  --font-display: 'Baloo 2', ui-rounded, sans-serif;
+
+  --radius-blob: 1.75rem;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Tibetan script needs extra line-height to render stacked vowels/subscripts cleanly */
+.tibetan {
+  font-family: var(--font-tibetan);
+  line-height: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

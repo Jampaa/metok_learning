@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Curated content — readable by any signed-in user, writable only via
+    // the Admin SDK (backend / console), never directly by a client.
+    match /vocabulary/{vocabId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /sentences/{sentenceId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /missions/{missionId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /nfc_tags/{tagUid} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // User-owned data.
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Each user's own discovery record for a word (their photo + when they
+    // found it) — exclusive per account, never shared. Only the Admin SDK
+    // (backend, via routes/discovery.py) writes these; the owner can read
+    // their own. Distinct from /vocabulary/{id}, which is the shared
+    // Tibetan word data (translation/audio/sentences) everyone reuses.
+    match /users/{uid}/discoveries/{wordId} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    match /progress/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /learning_events/{eventId} {
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}

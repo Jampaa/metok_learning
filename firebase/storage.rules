@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Pre-generated vocabulary/sentence audio: publicly readable (served to
+    // the app), writable only by the Admin SDK (the backend's TTS pipeline).
+    match /audio/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
