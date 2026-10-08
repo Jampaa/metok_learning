@@ -156,3 +156,52 @@ author's mother's workbook.
 when the app reloads until Phase 4 stores them in Firestore and Hive. The
 gallery has debug buttons to complete the current lesson and to reset
 the demo.
+
+## Phase 4
+
+**D29. New children start at ཀ.** A fresh account has nothing done and ཀ
+active. The spec's demo state (ཀ ཁ ག done, ང active, four Backpack words)
+is one tap away in the gallery ("Load demo") rather than being every
+child's starting point.
+
+**D30. One source for seed data.** `yonten/assets/data/curriculum.json`
+and `vocab_seed.json` are bundled into the app (offline fallback) and
+uploaded by the seed scripts, so Firestore and the app can't drift. The
+seed vocab is `verified: false` with empty phonetics, which must come from
+a speaker. `vocab` docs may say `verified` or the spec's `reviewed`; the
+app accepts both.
+
+**D31. Transactions with an offline fallback.** Lesson and scan updates
+run in a Firestore transaction (spec §7). Transactions need the server,
+so if one fails or takes more than 3 s, the same change is written as a
+merge built from the cached profile. That write applies locally at once
+and syncs later. It stays forward-only because completed lessons are
+added with arrayUnion. Testing note: in the web SDK, `disableNetwork()`
+doesn't block transactions, so the smoke check simulates offline with an
+instance pointed at a dead port.
+
+**D32. Rules.** `users/{uid}` is owner-only, and on update
+`progress.completedLessonIds` must be a superset of the stored list, so
+the server rejects any rewind. Delete is allowed (debug reset, and later
+"delete my data"). Yonten's subcollections (`words`, `stickers`,
+`quests`) get explicit owner rules instead of a recursive wildcard, so
+the legacy `discoveries` subcollection stays admin-only. `curriculum` and
+`vocab` are read-only for signed-in users. All legacy rules are kept
+until the Phase 10 cutover. Storage: `audio/**` is public to read and
+never client-writable; `users/{uid}/**` takes owner-only images up to
+2 MB.
+
+**D33. Local mode is per device.** If Firebase or anonymous sign-in
+fails at startup (e.g. the very first launch with no connection), the
+child plays in local mode and data is saved in Hive (`local.*`). Those
+local records aren't merged into a Firestore account later. Phase 9 adds
+a retry and a one-time merge.
+
+**D34. Hive stores JSON strings** in one box (`yonten`), so no type
+adapters are needed. `cache.profile` mirrors the Firestore profile for an
+instant cold start; `cache.audioPaths` is for Phase 6.
+
+**D35. Tooling.** The emulators need Java 21 (Homebrew `openjdk@21`). The
+Firestore emulator runs on port 8085 because Flutter web uses 8080. The
+rules tests live in `firebase/tests` and use Node's test runner with
+`@firebase/rules-unit-testing`. Commands are in `docs/yonten-dev.md`.

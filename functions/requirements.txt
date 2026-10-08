@@ -1,0 +1,2 @@
+# Phase 4: seed scripts. Phase 6 adds firebase-functions, google-genai, etc.
+firebase-admin>=6.5

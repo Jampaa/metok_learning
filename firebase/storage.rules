@@ -2,11 +2,23 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Pre-generated vocabulary/sentence audio: publicly readable (served to
-    // the app), writable only by the Admin SDK (the backend's TTS pipeline).
+    // Pre-generated word audio (Monlam TTS MP3s): publicly readable so the
+    // app can play and cache it, writable only by Cloud Functions / the
+    // Admin SDK (spec §7).
     match /audio/{allPaths=**} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // A child's own uploads (e.g. a small thumbnail of a found object, only
+    // if the parent allows it): owner only, images only, at most 2 MB.
+    match /users/{uid}/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && (request.resource == null
+            || (request.resource.size <= 2 * 1024 * 1024
+                && request.resource.contentType.matches('image/.*')));
     }
   }
 }

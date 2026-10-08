@@ -2,20 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yonten/app/app.dart';
 import 'package:yonten/data/curriculum_providers.dart';
+import 'package:yonten/data/local_store.dart';
 import 'package:yonten/data/models/progress.dart';
 import 'package:yonten/data/repositories/curriculum_repository.dart';
+import 'package:yonten/data/repositories/user_data_repository.dart';
 import 'package:yonten/features/map/map_layout.dart';
-import 'package:yonten/widgets/motion_scope.dart';
 
-final unit1 = LocalCurriculumRepository.seedChapters;
-final ordered = lessonsInOrder(unit1);
+import 'helpers.dart';
 
 void main() {
+  final unit1 = loadUnit1();
+  final ordered = lessonsInOrder(unit1);
+
   group('MapLayout', () {
     test('chapter 1 nodes sit on the spec path points', () {
-      final layout = MapLayout.build(unit1, ProgressNotifier.demoStart);
+      final layout = MapLayout.build(unit1, demoProgress);
       expect(
         layout.nodes.map((n) => n.center).toList(),
         const [
@@ -30,7 +32,7 @@ void main() {
     });
 
     test('demo states: 3 done, ང active, chest 5th, rest locked', () {
-      final layout = MapLayout.build(unit1, ProgressNotifier.demoStart);
+      final layout = MapLayout.build(unit1, demoProgress);
       final states = layout.nodes.map((n) => n.state).toList();
       expect(states.take(3), everyElement(NodeState.completed));
       expect(states[3], NodeState.active);
@@ -39,57 +41,30 @@ void main() {
       expect(states.skip(4), everyElement(NodeState.locked));
     });
 
+    test('a new child has ཀ active and no footsteps beyond it', () {
+      final layout = MapLayout.build(unit1, MapProgress.start);
+      expect(layout.activeNode!.lesson.label, 'ཀ');
+      final metric = layout.walked.computeMetrics().single;
+      expect(metric.length, closeTo(76, 0.01));
+    });
+
     test('walked path ends at the active node (256, 388)', () {
-      final layout = MapLayout.build(unit1, ProgressNotifier.demoStart);
+      final layout = MapLayout.build(unit1, demoProgress);
       final metric = layout.walked.computeMetrics().single;
       final end = metric.getTangentForOffset(metric.length)!.position;
       expect(end.dx, closeTo(256, 0.01));
       expect(end.dy, closeTo(388, 0.01));
-      final start = metric.getTangentForOffset(0)!.position;
-      expect(start, const Offset(200, 0));
+      expect(metric.getTangentForOffset(0)!.position, const Offset(200, 0));
     });
 
     test('a second chapter repeats the pattern after a banner gap', () {
-      final two = [
-        ...unit1,
-        LocalCurriculumRepository.seedChapters.first.copyForTest('unit2', 2),
-      ];
-      final layout = MapLayout.build(two, ProgressNotifier.demoStart);
+      final two = [...unit1, unit1.first.copyForTest('unit2', 2)];
+      final layout = MapLayout.build(two, demoProgress);
       expect(layout.nodes, hasLength(20));
       expect(layout.banners, hasLength(1));
       final firstOfTwo = layout.nodes[10].center;
       expect(firstOfTwo.dy, 1012 + MapLayout.clusterGap);
       expect(firstOfTwo.dx, MapLayout.waveX[10 % 8]);
-    });
-  });
-
-  group('ProgressNotifier only moves forward', () {
-    late ProviderContainer c;
-    setUp(() => c = ProviderContainer());
-    tearDown(() => c.dispose());
-
-    MapProgress p() => c.read(progressProvider);
-    ProgressNotifier n() => c.read(progressProvider.notifier);
-
-    test('finishing ང makes the chest current, then ཅ', () {
-      n().complete('unit1-nga', ordered);
-      expect(p().currentLessonId, 'unit1-chest-1');
-      n().complete('unit1-chest-1', ordered);
-      expect(p().currentLessonId, 'unit1-ca');
-      expect(p().completed, containsAll(['unit1-ka', 'unit1-nga', 'unit1-chest-1']));
-    });
-
-    test('opening the chest early skips it later, never rewinds', () {
-      n().complete('unit1-chest-1', ordered);
-      expect(p().currentLessonId, 'unit1-nga');
-      n().complete('unit1-nga', ordered);
-      expect(p().currentLessonId, 'unit1-ca');
-    });
-
-    test('replaying a done lesson changes nothing', () {
-      final before = p();
-      n().complete('unit1-ka', ordered);
-      expect(p(), same(before));
     });
   });
 
@@ -102,21 +77,6 @@ void main() {
   });
 
   group('map screen', () {
-    Future<ProviderContainer> pumpMap(WidgetTester tester) async {
-      tester.view.physicalSize = const Size(400, 800);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final c = ProviderContainer();
-      addTearDown(c.dispose);
-      c.read(reducedMotionOverrideProvider.notifier).toggle();
-      await tester.pumpWidget(UncontrolledProviderScope(
-        container: c,
-        child: const YontenApp(status: 'test'),
-      ));
-      await tester.pumpAndSettle();
-      return c;
-    }
-
     Future<void> tapNode(WidgetTester tester, String id) async {
       final node = find.byKey(ValueKey('node-$id'));
       // Center it, so it isn't under the pills at the top.
@@ -132,46 +92,85 @@ void main() {
         .firstWhere((t) => t.contains('!') && t.length > 12,
             orElse: () => '');
 
+    /// Nothing on screen watches stickers yet (Backpack is Phase 7), so
+    /// subscribe, let the stream emit, then read.
+    Future<List<EarnedSticker>> stickers(
+        WidgetTester tester, ProviderContainer c) async {
+      final sub = c.listen(stickersProvider, (_, _) {});
+      await tester.pump();
+      sub.close();
+      return c.read(stickersProvider).value ?? const [];
+    }
+
+    Future<void> letToastHide(WidgetTester tester) =>
+        tester.pump(const Duration(seconds: 3));
+
+    testWidgets('a new child starts with ཀ active', (tester) async {
+      final c = await pumpYonten(tester);
+      expect(c.read(progressProvider).resolveCurrent([for (final l in ordered) l.id]),
+          'unit1-ka');
+      await tapNode(tester, 'unit1-kha');
+      expect(toastText(tester), 'Keep going! This one opens after ཀ.');
+      await letToastHide(tester);
+    });
+
     testWidgets('completed node offers practice', (tester) async {
-      await pumpMap(tester);
+      await pumpYonten(tester, demo: true);
       await tapNode(tester, 'unit1-ka');
       expect(toastText(tester), "Let's practice ཀ again!");
-      await tester.pump(const Duration(seconds: 3));
+      await letToastHide(tester);
     });
 
     testWidgets('locked node is gentle, not blocked', (tester) async {
-      await pumpMap(tester);
+      await pumpYonten(tester, demo: true);
       await tapNode(tester, 'unit1-ca');
       expect(toastText(tester), 'Keep going! This one opens after ང.');
-      await tester.pump(const Duration(seconds: 3));
+      await letToastHide(tester);
     });
 
     testWidgets('chest opens once, grants the sticker, stays open',
         (tester) async {
-      final c = await pumpMap(tester);
+      final c = await pumpYonten(tester, demo: true);
       await tapNode(tester, 'unit1-chest-1');
+      await tester.pumpAndSettle();
       expect(toastText(tester), contains('Chest opened!'));
-      expect(c.read(stickersProvider).map((s) => s.id), ['chorten']);
+      expect((await stickers(tester, c)).map((s) => s.id), ['chorten']);
       expect(c.read(progressProvider).currentLessonId, 'unit1-nga');
-      await tester.pump(const Duration(seconds: 3));
+      await letToastHide(tester);
 
       await tapNode(tester, 'unit1-chest-1');
       expect(toastText(tester), contains('This chest is open!'));
-      expect(c.read(stickersProvider), hasLength(1));
-      await tester.pump(const Duration(seconds: 3));
+      expect(await stickers(tester, c), hasLength(1));
+      await letToastHide(tester);
     });
 
     testWidgets('reaching the chest opens it automatically', (tester) async {
-      final c = await pumpMap(tester);
-      c.read(progressProvider.notifier).complete('unit1-nga', ordered);
+      final c = await pumpYonten(tester, demo: true);
+      final nga = ordered.firstWhere((l) => l.id == 'unit1-nga');
+      await c.read(userDataProvider).completeLesson(nga, ordered);
       await tester.pumpAndSettle();
       expect(c.read(progressProvider).currentLessonId, 'unit1-ca');
-      expect(c.read(stickersProvider).map((s) => s.id), ['chorten']);
-      await tester.pump(const Duration(seconds: 3));
+      expect((await stickers(tester, c)).map((s) => s.id), ['chorten']);
+      await letToastHide(tester);
+    });
+
+    testWidgets('progress survives an app restart', (tester) async {
+      final store = MemoryStore();
+      var c = await pumpYonten(tester, store: store, demo: true);
+      final nga = ordered.firstWhere((l) => l.id == 'unit1-nga');
+      await c.read(userDataProvider).completeLesson(nga, ordered);
+      await tester.pumpAndSettle();
+      await letToastHide(tester);
+
+      // Tear the app down and start it again on the same device store.
+      await tester.pumpWidget(const SizedBox());
+      c = await pumpYonten(tester, store: store);
+      expect(c.read(progressProvider).currentLessonId, 'unit1-ca');
+      expect(find.byKey(const ValueKey('node-unit1-ca')), findsOneWidget);
     });
 
     testWidgets('active node opens the scanner', (tester) async {
-      await pumpMap(tester);
+      await pumpYonten(tester, demo: true);
       await tapNode(tester, 'unit1-nga');
       await tester.pumpAndSettle();
       expect(find.text('Magic Eye'), findsOneWidget);

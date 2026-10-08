@@ -1,0 +1,26 @@
+{
+  "_comment": "Single source for the map curriculum. Read by the app (offline fallback) and by functions/seed_curriculum.py. workbookPages are placeholders until confirmed from the workbook (DECISIONS.md D27).",
+  "chapters": [
+    {
+      "id": "unit1",
+      "order": 1,
+      "title": "The Alphabet",
+      "titleTibetan": "ཀ་ཁ་ག་ང།",
+      "unitLabel": "Unit 1",
+      "workbookChapter": 1,
+      "workbookPages": [1, 6],
+      "lessons": [
+        {"id": "unit1-ka", "order": 1, "type": "letter", "label": "ཀ", "wordId": "letter-ka"},
+        {"id": "unit1-kha", "order": 2, "type": "letter", "label": "ཁ", "wordId": "letter-kha"},
+        {"id": "unit1-ga", "order": 3, "type": "letter", "label": "ག", "wordId": "letter-ga"},
+        {"id": "unit1-nga", "order": 4, "type": "letter", "label": "ང", "wordId": "letter-nga"},
+        {"id": "unit1-chest-1", "order": 5, "type": "chest", "label": "", "rewardStickerId": "chorten"},
+        {"id": "unit1-ca", "order": 6, "type": "letter", "label": "ཅ", "wordId": "letter-ca"},
+        {"id": "unit1-cha", "order": 7, "type": "letter", "label": "ཆ", "wordId": "letter-cha"},
+        {"id": "unit1-ja", "order": 8, "type": "letter", "label": "ཇ", "wordId": "letter-ja"},
+        {"id": "unit1-nya", "order": 9, "type": "letter", "label": "ཉ", "wordId": "letter-nya"},
+        {"id": "unit1-ta", "order": 10, "type": "letter", "label": "ཏ", "wordId": "letter-ta"}
+      ]
+    }
+  ]
+}

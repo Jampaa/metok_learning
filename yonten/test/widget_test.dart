@@ -1,29 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:yonten/app/app.dart';
 import 'package:yonten/widgets/motion_scope.dart';
 import 'package:yonten/widgets/stat_pills.dart';
 import 'package:yonten/widgets/toy_button.dart';
 import 'package:yonten/widgets/toy_surface.dart';
 import 'package:yonten/widgets/yonten_sprite.dart';
 
-/// Pumps the whole app with reduced motion on, so loops are stopped and
-/// pumpAndSettle can settle.
-Future<void> pumpApp(WidgetTester tester) async {
-  tester.view.physicalSize = const Size(400, 800);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-  final container = ProviderContainer();
-  addTearDown(container.dispose);
-  container.read(reducedMotionOverrideProvider.notifier).toggle();
-  await tester.pumpWidget(UncontrolledProviderScope(
-    container: container,
-    child: const YontenApp(status: 'test'),
-  ));
-  await tester.pumpAndSettle();
-}
+import 'helpers.dart';
+
+Future<void> pumpApp(WidgetTester tester) => pumpYonten(tester, demo: true);
 
 /// The single frame that is currently on stage.
 String shownFrame(WidgetTester tester) {

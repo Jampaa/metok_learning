@@ -86,6 +86,10 @@ class MapLayout {
   }
 
   factory MapLayout.build(List<Chapter> chapters, MapProgress progress) {
+    final current = progress.resolveCurrent([
+      for (final c in chapters)
+        for (final l in c.lessons) l.id,
+    ]);
     final nodes = <MapNode>[];
     final banners = <ClusterBanner>[];
     final scenery = <Scenery>[];
@@ -115,7 +119,7 @@ class MapLayout {
       for (final lesson in chapter.lessons) {
         final state = progress.isDone(lesson.id)
             ? NodeState.completed
-            : lesson.id == progress.currentLessonId
+            : lesson.id == current
                 ? NodeState.active
                 : NodeState.locked;
         nodes.add(MapNode(

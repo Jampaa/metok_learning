@@ -90,14 +90,16 @@ disagree. Each one gets logged in `DECISIONS.md` in Phase 0.
 
 **Goal:** real persistence before more screens are built on top of it.
 
-- [ ] `AuthService`: anonymous sign-in on first launch.
-- [ ] Firestore repositories for `users/{uid}`, `words`, `stickers`, `quests` and `curriculum`, plus `vocab` (read-only).
-- [ ] Firestore persistence on, including web.
-- [ ] A Hive cache for the profile snapshot, settings and audio paths, so the app opens instantly.
-- [ ] Riverpod providers switch between the Firestore and local implementations when Firebase isn't configured.
-- [ ] A forward-only progress transaction (`completeLesson`), and the streak transaction using the child's local date.
-- [ ] A curriculum seed script for chapter 1, with `workbookChapter` and `workbookPages`.
-- [ ] First draft of `firestore.rules` and `storage.rules` (§7), tested in the emulator.
+- [x] `AuthService`: anonymous sign-in on first launch.
+- [x] Firestore repositories for `users/{uid}`, `words`, `stickers`, `quests` and `curriculum`, plus `vocab` (read-only).
+- [x] Firestore persistence on, including web.
+- [x] A Hive cache for the profile snapshot, settings and audio paths, so the app opens instantly.
+- [x] Riverpod providers switch between the Firestore and local implementations when Firebase isn't configured.
+- [x] A forward-only progress transaction (`completeLesson`), and the streak transaction using the child's local date.
+- [x] A curriculum seed script for chapter 1, with `workbookChapter` and `workbookPages`.
+- [x] First draft of `firestore.rules` and `storage.rules` (§7), tested in the emulator.
+
+- [ ] **(Owner)** Deploy the new rules and seed production: `firebase deploy --only firestore:rules,storage`, then run `seed_curriculum.py` with Admin credentials (`docs/yonten-dev.md`).
 
 **Done when:** the map renders from Firestore, survives a reload, and still renders in airplane mode.
 
@@ -153,6 +155,7 @@ disagree. Each one gets logged in `DECISIONS.md` in Phase 0.
 
 - [ ] Final security rules, with emulator tests proving one user can't read or write another user's data.
 - [ ] App Check enforced in production.
+- [ ] Local-mode recovery (D33): retry sign-in later and merge `local.*` data into the account once.
 - [ ] Offline pass: cold start in airplane mode, then the queued scan syncs.
 - [ ] Accessibility pass: Semantics labels, tap targets of at least 44 px, contrast of at least 4.5:1, reduced motion.
 - [ ] Banned-list audit: no gradients, emoji, Material icons or uppercase labels.

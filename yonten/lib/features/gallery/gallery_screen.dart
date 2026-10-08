@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/curriculum_providers.dart';
+import '../../data/models/word.dart';
 import '../../theme/colors.dart';
 import '../../theme/text.dart';
 import '../../widgets/ink_icons.dart';
@@ -66,37 +67,8 @@ class GalleryScreen extends ConsumerWidget {
                   onPressed: () =>
                       ref.read(reducedMotionOverrideProvider.notifier).toggle(),
                 ),
-                _section('Map progress (debug)'),
-                Wrap(spacing: 10, runSpacing: 10, children: [
-                  ToyButton(
-                    semanticLabel: 'Complete the current lesson',
-                    label: 'Complete current lesson',
-                    color: YColors.yellow,
-                    onPressed: () {
-                      final current = ref.read(progressProvider).currentLessonId;
-                      final ordered = lessonsInOrder(
-                          ref.read(curriculumProvider).value ?? const []);
-                      if (current != null) {
-                        ref.read(progressProvider.notifier).complete(current, ordered);
-                      }
-                    },
-                  ),
-                  ToyButton(
-                    semanticLabel: 'Reset map progress to the demo start',
-                    label: 'Reset demo',
-                    color: YColors.white,
-                    onPressed: () {
-                      ref.read(progressProvider.notifier).debugReset();
-                      ref.read(stickersProvider.notifier).debugReset();
-                    },
-                  ),
-                ]),
-                const SizedBox(height: 6),
-                Text(
-                  'Current: ${ref.watch(progressProvider).currentLessonId ?? 'all done'} · '
-                  'stickers: ${ref.watch(stickersProvider).map((s) => s.id).join(', ')}',
-                  style: YText.text(13, color: YColors.muted),
-                ),
+                _section('Data (debug)'),
+                const _DataDebug(),
                 _section('Colors'),
                 const _Swatches(),
                 _section('Type'),
@@ -334,6 +306,77 @@ class _StackedLamp extends StatelessWidget {
         Image.asset('assets/images/lamp-base.webp'),
         Image.asset('assets/images/lamp-flame.webp'),
       ]),
+    );
+  }
+}
+
+/// Shows where data comes from and lets you reset or load the demo.
+class _DataDebug extends ConsumerWidget {
+  const _DataDebug();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.watch(userDataProvider);
+    final backend = ref.watch(backendProvider);
+    final profile = ref.watch(profileProvider).value;
+    final stickers = ref.watch(stickersProvider).value ?? const [];
+    final words = ref.watch(wordsProvider).value ?? const [];
+    final chapters = ref.watch(curriculumProvider);
+    final curriculumSource = ref.watch(curriculumRepositoryProvider).source;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'User data: ${repo.mode}${backend.uid == null ? '' : ' (uid ${backend.uid})'}\n'
+          'Curriculum: ${chapters.hasValue ? curriculumSource : 'loading'}\n'
+          'Current lesson: ${profile?.progress.currentLessonId ?? 'first lesson'} · '
+          'done: ${profile?.progress.completed.length ?? 0}\n'
+          'XP ${profile?.xp ?? 0} · streak ${profile?.streak.count ?? 0} · '
+          'words ${words.length} · stickers ${stickers.map((s) => s.id).join(', ')}',
+          style: YText.text(13, color: YColors.muted),
+        ),
+        const SizedBox(height: 10),
+        Wrap(spacing: 10, runSpacing: 10, children: [
+          ToyButton(
+            semanticLabel: 'Complete the current lesson',
+            label: 'Complete current lesson',
+            color: YColors.yellow,
+            onPressed: () async {
+              final chapters = await ref.read(curriculumProvider.future);
+              final all = lessonsInOrder(chapters);
+              final current = ref
+                  .read(progressProvider)
+                  .resolveCurrent([for (final l in all) l.id]);
+              if (current == null) return;
+              await ref
+                  .read(userDataProvider)
+                  .completeLesson(all.firstWhere((l) => l.id == current), all);
+            },
+          ),
+          ToyButton(
+            semanticLabel: 'Load the spec demo state',
+            label: 'Load demo',
+            color: YColors.white,
+            onPressed: () async {
+              final vocab = await ref.read(vocabRepositoryProvider).starter();
+              final now = DateTime.now();
+              final words = [
+                for (final (i, v) in vocab.where((v) => !v.id.startsWith('letter-')).indexed)
+                  FoundWord.fromVocab(v, at: now.subtract(Duration(minutes: i))),
+              ];
+              await ref.read(userDataProvider).debugLoadDemo(
+                  lessonsInOrder(await ref.read(curriculumProvider.future)), words);
+            },
+          ),
+          ToyButton(
+            semanticLabel: 'Start over from the first lesson',
+            label: 'Start over',
+            color: YColors.white,
+            onPressed: () => ref.read(userDataProvider).debugReset(),
+          ),
+        ]),
+      ],
     );
   }
 }

@@ -1,33 +1,61 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
+import 'data/curriculum_providers.dart';
+import 'data/local_store.dart';
 import 'firebase_options.dart';
+import 'services/auth_service.dart';
 
-/// Connect to Firebase and sign the child in anonymously. If Firebase
-/// isn't reachable, the app still opens in local mode (AGENTS.md:
-/// unconfigured services must never break the screen).
+/// `flutter run --dart-define=USE_EMULATORS=true` talks to the local
+/// Firebase emulators (`firebase emulators:start`) instead of production.
+const _useEmulators = bool.fromEnvironment('USE_EMULATORS');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final status = await _bootstrap();
-  runApp(ProviderScope(child: YontenApp(status: status)));
+  final store = await HiveStore.open();
+  final backend = await _connect(store);
+  runApp(ProviderScope(
+    overrides: [backendProvider.overrideWithValue(backend)],
+    child: YontenApp(status: _describe(backend)),
+  ));
 }
 
-Future<String> _bootstrap() async {
+/// Starts Firebase and signs the child in anonymously. Any failure falls
+/// back to local mode: the app still opens and saves progress on the
+/// device (AGENTS.md: unconfigured services never break the screen).
+Future<Backend> _connect(KeyValueStore store) async {
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    final db = FirebaseFirestore.instance;
+    if (_useEmulators) {
+      final host = defaultTargetPlatform == TargetPlatform.android && !kIsWeb
+          ? '10.0.2.2'
+          : 'localhost';
+      db.useFirestoreEmulator(host, 8085);
+      await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+    }
+    // Offline cache on every platform, including web (spec §7).
+    db.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+    final uid = await AuthService(FirebaseAuth.instance).ensureSignedIn();
+    return Backend(store: store, firebase: true, uid: uid);
   } catch (e) {
-    return 'Local mode (Firebase unavailable)';
+    debugPrint('Yonten: starting in local mode ($e)');
+    return Backend(store: store);
   }
-  try {
-    final auth = FirebaseAuth.instance;
-    final user = auth.currentUser ?? (await auth.signInAnonymously()).user;
-    return 'Signed in: ${user?.uid ?? 'unknown'}';
-  } catch (e) {
-    return 'Local mode (anonymous sign-in unavailable)';
-  }
+}
+
+String _describe(Backend b) {
+  if (!b.firebase) return 'Local mode (Firebase unavailable)';
+  if (b.uid == null) return 'Local mode (not signed in)';
+  return 'Signed in${_useEmulators ? ' (emulators)' : ''}: ${b.uid}';
 }

@@ -1,5 +1,9 @@
 rules_version = '2';
 
+// Shared by the Yonten app (yonten/) and, until the Phase 10 cutover, the
+// legacy React app (frontend/ + backend/). Legacy rules are kept unchanged
+// at the bottom.
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -11,8 +15,58 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Curated content — readable by any signed-in user, writable only via
-    // the Admin SDK (backend / console), never directly by a client.
+    // ---------- Yonten: global content (read-only for clients) ----------
+
+    // Map chapters (spec §7). Written only by functions/seed_curriculum.py
+    // with the Admin SDK.
+    match /curriculum/{chapterId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Word catalog (spec §7). Written only by Cloud Functions / seed
+    // scripts. `verified` is set by a human after a fluent speaker checks it.
+    match /vocab/{wordId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // ---------- User-owned data: users/{uid} ----------
+
+    // Completed lessons may only grow: a client can never rewind progress
+    // (spec §5 "the map only moves forward"). A missing field counts as
+    // empty, so old or legacy docs can be upgraded.
+    function completedIds(data) {
+      return data.get('progress', {}).get('completedLessonIds', []);
+    }
+
+    function progressOnlyGrows() {
+      return completedIds(request.resource.data).hasAll(completedIds(resource.data));
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) && progressOnlyGrows();
+      // Deleting is allowed (debug reset now, "delete my data" later).
+      allow delete: if isOwner(uid);
+    }
+
+    // Yonten subcollections: found words, chest stickers, daily quests.
+    match /users/{uid}/words/{wordId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /users/{uid}/stickers/{stickerId} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /users/{uid}/quests/{date} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // ---------- Legacy app (remove at the Phase 10 cutover) ----------
+
     match /vocabulary/{vocabId} {
       allow read: if isSignedIn();
       allow write: if false;
@@ -33,16 +87,8 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // User-owned data.
-    match /users/{uid} {
-      allow read, write: if isOwner(uid);
-    }
-
-    // Each user's own discovery record for a word (their photo + when they
-    // found it) — exclusive per account, never shared. Only the Admin SDK
-    // (backend, via routes/discovery.py) writes these; the owner can read
-    // their own. Distinct from /vocabulary/{id}, which is the shared
-    // Tibetan word data (translation/audio/sentences) everyone reuses.
+    // Each user's own discovery record for a word. Only the Admin SDK
+    // (legacy backend) writes these; the owner can read their own.
     match /users/{uid}/discoveries/{wordId} {
       allow read: if isOwner(uid);
       allow write: if false;

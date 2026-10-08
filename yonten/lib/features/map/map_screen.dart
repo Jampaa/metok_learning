@@ -50,6 +50,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   int _celebrate = 0;
   String? _celebratingChestId;
   bool _initialScrollDone = false;
+
+  /// Chests already being opened, so a rebuild before the write lands
+  /// doesn't open the same chest twice.
+  final _opening = <String>{};
   double _scale = 1;
 
   @override
@@ -97,11 +101,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   /// and celebrates.
   void _openChest(MapNode node) {
     final lesson = node.lesson;
-    ref.read(progressProvider.notifier).complete(lesson.id, _ordered);
-    final sticker = lesson.rewardStickerId;
-    if (sticker != null) {
-      ref.read(stickersProvider.notifier).earn(sticker, fromLessonId: lesson.id);
-    }
+    if (_opening.contains(lesson.id)) return;
+    _opening.add(lesson.id);
+    // Marks the chest done (forward only) and grants its sticker.
+    ref.read(userDataProvider).completeLesson(lesson, _ordered);
     setState(() {
       _celebratingChestId = lesson.id;
       _celebrate++;
@@ -138,7 +141,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final active = layout.activeNode;
     if (active != null && active.lesson.isChest) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && ref.read(progressProvider).currentLessonId == active.lesson.id) {
+        if (mounted && !ref.read(progressProvider).isDone(active.lesson.id)) {
           _openChest(active);
         }
       });

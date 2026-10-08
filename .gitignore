@@ -18,3 +18,13 @@ backend/*.egg-info/
 .DS_Store
 .vscode/
 .idea/
+
+# Firebase rules tests / emulator
+firebase/tests/node_modules/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Python functions venv
+functions/.venv/
+functions/__pycache__/
