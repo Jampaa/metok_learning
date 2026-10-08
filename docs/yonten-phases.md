@@ -105,13 +105,13 @@ disagree. Each one gets logged in `DECISIONS.md` in Phase 0.
 
 ## Phase 5: Scanner UI with a mock vision service (§5 Scanner) — day 4
 
-- [ ] Live `camera` preview, falling back to `image_picker`, and to a still image on web without a camera.
-- [ ] Header, corner brackets, scan line, and the "What's in your kitchen?" sticker.
-- [ ] The state machine `looking` → `thinking` → `found` | `retry`, with the Yonten pose for each state. No red error states.
-- [ ] The result card animation, the XP seal stamp, and the celebrate sequence with confetti.
-- [ ] A `VisionService` interface with a `MockVisionService` that returns seeded vocab.
-- [ ] Resize the JPEG on the device to at most 1024 px.
-- [ ] Hook the result into adding the word, XP, streak and quest progress (Phase 4 repos).
+- [x] Live `camera` preview, falling back to `image_picker`, and to a still image on web without a camera.
+- [x] Header, corner brackets, scan line, and the "What's in your kitchen?" sticker.
+- [x] The state machine `looking` → `thinking` → `found` | `retry`, with the Yonten pose for each state. No red error states.
+- [x] The result card animation, the XP seal stamp, and the celebrate sequence with confetti.
+- [x] A `VisionService` interface with a `MockVisionService` that returns seeded vocab.
+- [x] Resize the JPEG on the device to at most 1024 px.
+- [x] Hook the result into adding the word, XP, streak and quest progress (Phase 4 repos).
 
 **Done when:** a mock scan adds a word to Firestore and the full animation sequence plays.
 
@@ -119,22 +119,27 @@ disagree. Each one gets logged in `DECISIONS.md` in Phase 0.
 
 **Goal:** real scans with real Tibetan audio. Port from `backend/app/services/`; don't rewrite.
 
-- [ ] `functions/` Python 2nd gen, us-central1. Secrets `GEMINI_API_KEY` and `MONLAM_API_KEY` (plus the dictionary key if it's separate). A `GEMINI_MODEL` config value (D7).
-- [ ] `identify_object` callable with App Check enforced:
+- [x] `functions/` Python 2nd gen, us-central1. Secrets `GEMINI_API_KEY` and `MONLAM_API_KEY` (plus the dictionary key if it's separate). A `GEMINI_MODEL` config value (D7).
+- [x] `identify_object` callable with App Check enforced:
   - Gemini returns structured English + confidence + kid_safe.
   - The result is looked up in the `vocab` catalog, then the Monlam dictionary (D2).
   - Return `retry` when confidence is below 0.6 or the object isn't kid-safe.
   - Keep a thumbnail only if the parent allows it.
-- [ ] `get_word_audio` behind `TtsProvider` (Monlam, plus a stub). Cache the MP3 at `audio/{wordId}.mp3`.
-- [ ] `functions/seed_vocab.py`: the demo words and Unit 1 letters, generating their audio.
+- [x] `get_word_audio` behind `TtsProvider` (Monlam, plus a stub). Cache the MP3 at `audio/{wordId}.mp3`.
+- [x] `functions/seed_vocab.py`: the demo words and Unit 1 letters, generating their audio.
 - [ ] **Human step:** the fluent speaker verifies the seed list, then the seed sets `verified: true` (D4).
-- [ ] `FunctionsVisionService` replaces the mock when configured. `just_audio` playback with offline caching of audio paths.
-- [ ] Offline scan queue with the message "Yonten will check this when we're back online".
+- [x] `FunctionsVisionService` replaces the mock when configured. `just_audio` playback with offline caching of audio paths.
+- [x] Offline scan queue with the message "Yonten will check this when we're back online".
+
+- [x] Every photo kept and shown on the word's card (owner request, D37).
+- [ ] **(Owner)** Renew the Monlam quota (D45), upgrade to Blaze, set the two secrets, deploy functions and rules, then run `seed_vocab.py` (`docs/yonten-dev.md`).
+- [ ] App Check enforcement moves to Phase 9 (D43).
 
 **Done when:** a real photo of an apple returns ཀུ་ཤུ with Monlam audio on a phone browser, and no keys appear in `yonten/`.
 
 ## Phase 7: Backpack and Quests (§5) — day 7
 
+- [ ] Backpack: each card shows only the child's own photo via `WordPhoto` (D37).
 - [ ] Backpack: the word grid from `users/{uid}/words` (newest first), rotations, staggered pop-in, tap to play audio with a wiggle, and the "Find more words" button.
 - [ ] Stickers row: earned stickers from map chests, plus dashed empty slots.
 - [ ] Quests: a daily document at `quests/{yyyy-mm-dd}` created on first open. Quest progress hooks from scans, lessons and XP.
@@ -185,6 +190,7 @@ The same Flutter code base, so this phase is configuration, compliance and store
 
 **11b. Kids-app compliance**
 - [ ] Apple Kids Category and Google Play Families policy: no third-party analytics or ads, and a parental gate before any external link, purchase or account linking (the hold-to-unlock may need a stronger gate, such as a simple math question; check the current guidelines).
+- [ ] Photos are kept (D37): parental consent, a "delete my child's photos" control, and disclosure in the privacy policy and store forms.
 - [ ] COPPA and GDPR-K privacy policy, a data-deletion flow in Parent Settings, and a minimal data inventory.
 - [ ] Privacy nutrition labels and the Data safety form.
 

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ import 'data/curriculum_providers.dart';
 import 'data/local_store.dart';
 import 'firebase_options.dart';
 import 'services/auth_service.dart';
+import 'services/providers.dart';
 
 /// `flutter run --dart-define=USE_EMULATORS=true` talks to the local
 /// Firebase emulators (`firebase emulators:start`) instead of production.
@@ -40,6 +42,8 @@ Future<Backend> _connect(KeyValueStore store) async {
           : 'localhost';
       db.useFirestoreEmulator(host, 8085);
       await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+      functionsInstance().useFunctionsEmulator(host, 5001);
+      await FirebaseStorage.instance.useStorageEmulator(host, 9199);
     }
     // Offline cache on every platform, including web (spec §7).
     db.settings = const Settings(

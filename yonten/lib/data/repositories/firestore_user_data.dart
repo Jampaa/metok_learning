@@ -46,6 +46,8 @@ class FirestoreUserData implements UserDataRepository {
       _user.collection('words');
   CollectionReference<Map<String, dynamic>> get _stickers =>
       _user.collection('stickers');
+  CollectionReference<Map<String, dynamic>> get _photos =>
+      _user.collection('photos');
   DocumentReference<Map<String, dynamic>> _quests(String date) =>
       _user.collection('quests').doc(date);
 
@@ -189,6 +191,35 @@ class FirestoreUserData implements UserDataRepository {
   }
 
   @override
+  Future<void> recordPhoto(PhotoRecord photo) async {
+    unawaited(_photos.doc(photo.id).set({
+      ...photo.toMap(),
+      'takenAt': Timestamp.fromDate(photo.takenAt),
+      'storagePath': PhotoRecord.storagePath(uid, photo.id),
+    }, SetOptions(merge: true)));
+  }
+
+  @override
+  Stream<List<PhotoRecord>> watchPhotos() => _photos
+      .orderBy('takenAt', descending: true)
+      .snapshots()
+      .map((q) => [for (final d in q.docs) PhotoRecord.fromMap(d.id, d.data())]);
+
+  @override
+  Future<void> attachPhotoUrl(String photoId, String url, {String? wordId}) async {
+    unawaited(_photos.doc(photoId).set({'url': url}, SetOptions(merge: true)));
+    if (wordId == null) return;
+    try {
+      final word = await _words.doc(wordId).get();
+      if (word.data()?['photoId'] == photoId) {
+        unawaited(_words.doc(wordId).set({'imageUrl': url}, SetOptions(merge: true)));
+      }
+    } catch (_) {
+      // Offline: the card already shows the photo from the device.
+    }
+  }
+
+  @override
   Future<void> saveQuests(String date, List<QuestEntry> quests) async {
     unawaited(_quests(date).set({
       'quests': [for (final q in quests) q.toMap()],
@@ -222,6 +253,7 @@ class FirestoreUserData implements UserDataRepository {
     await _deleteAll(_words);
     await _deleteAll(_stickers);
     await _deleteAll(_user.collection('quests'));
+    await _deleteAll(_photos);
     // Deleting the doc (rather than rewinding it) keeps the forward-only
     // rule intact; watchProfile recreates a fresh doc.
     await _user.delete();

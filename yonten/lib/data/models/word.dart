@@ -10,7 +10,7 @@ class FoundWord {
     this.phonetic = '',
     this.imageUrl,
     this.audioUrl,
-    this.picture,
+    this.photoId,
     required this.foundAt,
   });
 
@@ -21,12 +21,27 @@ class FoundWord {
   final String tibetan;
   final bool verified;
   final String phonetic;
+  /// Download URL of the child's own photo of this word, once uploaded.
   final String? imageUrl;
   final String? audioUrl;
 
-  /// Built-in placeholder art name (e.g. `obj-apple`), if any.
-  final String? picture;
+  /// The child's photo for this word (`users/{uid}/photos/{photoId}`). The
+  /// word's card shows this photo and nothing else (D37).
+  final String? photoId;
   final DateTime foundAt;
+
+  FoundWord copyWith({String? imageUrl, String? photoId, String? audioUrl}) =>
+      FoundWord(
+        id: id,
+        english: english,
+        tibetan: tibetan,
+        verified: verified,
+        phonetic: phonetic,
+        imageUrl: imageUrl ?? this.imageUrl,
+        audioUrl: audioUrl ?? this.audioUrl,
+        photoId: photoId ?? this.photoId,
+        foundAt: foundAt,
+      );
 
   Map<String, dynamic> toMap() => {
         'english': english,
@@ -35,7 +50,7 @@ class FoundWord {
         'phonetic': phonetic,
         if (imageUrl != null) 'imageUrl': imageUrl,
         if (audioUrl != null) 'audioUrl': audioUrl,
-        if (picture != null) 'picture': picture,
+        if (photoId != null) 'photoId': photoId,
         'foundAt': foundAt.toIso8601String(),
       };
 
@@ -47,7 +62,7 @@ class FoundWord {
         phonetic: (m['phonetic'] as String?) ?? '',
         imageUrl: m['imageUrl'] as String?,
         audioUrl: m['audioUrl'] as String?,
-        picture: m['picture'] as String?,
+        photoId: m['photoId'] as String?,
         foundAt: parseTime(m['foundAt']),
       );
 
@@ -58,7 +73,6 @@ class FoundWord {
         verified: v.verified,
         phonetic: v.phonetic,
         audioUrl: v.audioUrl,
-        picture: v.picture,
         foundAt: at ?? DateTime.now(),
       );
 }
@@ -72,7 +86,6 @@ class VocabEntry {
     required this.verified,
     this.phonetic = '',
     this.audioUrl,
-    this.picture,
   });
 
   final String id;
@@ -81,7 +94,6 @@ class VocabEntry {
   final bool verified;
   final String phonetic;
   final String? audioUrl;
-  final String? picture;
 
   factory VocabEntry.fromMap(String id, Map<String, dynamic> m) => VocabEntry(
         id: id,
@@ -91,7 +103,6 @@ class VocabEntry {
         verified: (m['verified'] ?? m['reviewed']) as bool? ?? false,
         phonetic: (m['phonetic'] as String?) ?? '',
         audioUrl: m['audioUrl'] as String?,
-        picture: m['picture'] as String?,
       );
 }
 
@@ -135,5 +146,44 @@ class QuestEntry {
         progress: (m['progress'] as num?)?.toInt() ?? 0,
         target: (m['target'] as num?)?.toInt() ?? 1,
         claimed: m['claimed'] as bool? ?? false,
+      );
+}
+
+/// Every photo the child takes is kept (D37):
+/// `users/{uid}/photos/{photoId}`, image at `users/{uid}/photos/{id}.jpg`.
+class PhotoRecord {
+  const PhotoRecord({
+    required this.id,
+    required this.takenAt,
+    required this.status,
+    this.wordId,
+    this.url,
+  });
+
+  final String id;
+  final DateTime takenAt;
+
+  /// found | retry | queued
+  final String status;
+  final String? wordId;
+
+  /// Download URL once uploaded; null while the photo is only on the device.
+  final String? url;
+
+  static String storagePath(String uid, String id) => 'users/$uid/photos/$id.jpg';
+
+  Map<String, dynamic> toMap() => {
+        'takenAt': takenAt.toIso8601String(),
+        'status': status,
+        if (wordId != null) 'wordId': wordId,
+        if (url != null) 'url': url,
+      };
+
+  factory PhotoRecord.fromMap(String id, Map<String, dynamic> m) => PhotoRecord(
+        id: id,
+        takenAt: parseTime(m['takenAt']),
+        status: (m['status'] as String?) ?? 'found',
+        wordId: m['wordId'] as String?,
+        url: m['url'] as String?,
       );
 }

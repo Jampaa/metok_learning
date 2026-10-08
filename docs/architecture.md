@@ -58,7 +58,7 @@ works with zero configuration:
 | Firebase Auth | Progress stored in `localStorage` instead of a signed-in user doc |
 | Real NFC (Web NFC / ESP32) | "Simulate Tap" buttons in `features/nfc/NfcScreen.tsx` |
 
-## Child privacy
+## Child privacy (legacy app)
 
 Camera images are read into memory for the request and discarded by
 default — **except** when a photo results in a genuinely new learned word
@@ -93,3 +93,14 @@ Flutter app (yonten/)
 ```
 
 The legacy request flow above stays live until the Phase 10 cutover.
+
+### Yonten: photos (DECISIONS.md D37)
+
+At the owner's request, Yonten keeps every photo a child takes. Each one
+is saved on the device, uploaded to `users/{uid}/photos/{photoId}.jpg`
+(owner-only Storage rule, images up to 2 MB), and recorded in
+`users/{uid}/photos/{photoId}`. A word's flash card shows only the
+child's own photo of it. Gemini sees the photo only for the
+`identify_object` call and the function never stores it. Before store
+release (Phase 11b) the parent area needs a delete control, and the
+privacy policy must disclose photo storage.

@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/routes.dart';
 import '../../data/curriculum_providers.dart';
 import '../../data/models/curriculum.dart';
-import '../../services/audio_service.dart';
+import '../../services/providers.dart';
 import '../../theme/colors.dart';
 import '../../theme/motion.dart';
 import '../../widgets/level_node.dart';
@@ -77,7 +77,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final lesson = node.lesson;
     switch (node.state) {
       case NodeState.active:
-        context.push(Routes.scan);
+        // The scan challenge for this lesson: a find completes it.
+        context.push('${Routes.scan}?lesson=${Uri.encodeQueryComponent(lesson.id)}');
       case NodeState.completed:
         _toast.show("Let's practice ${lesson.label} again!");
         ref.read(audioServiceProvider).playWord(lesson.wordId);

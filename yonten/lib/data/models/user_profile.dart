@@ -119,7 +119,6 @@ class UserSettings {
   const UserSettings({
     this.sound = true,
     this.dailyGoal = 3,
-    this.keepPhotos = false,
   });
 
   final bool sound;
@@ -127,15 +126,11 @@ class UserSettings {
   /// Words to find per day.
   final int dailyGoal;
 
-  /// Parent allows keeping a small thumbnail of found objects (spec §8.1).
-  final bool keepPhotos;
-
   Map<String, dynamic> toMap() =>
-      {'sound': sound, 'dailyGoal': dailyGoal, 'keepPhotos': keepPhotos};
+      {'sound': sound, 'dailyGoal': dailyGoal};
 
   factory UserSettings.fromMap(Map<String, dynamic>? m) => UserSettings(
         sound: m?['sound'] as bool? ?? true,
         dailyGoal: (m?['dailyGoal'] as num?)?.toInt() ?? 3,
-        keepPhotos: m?['keepPhotos'] as bool? ?? false,
       );
 }

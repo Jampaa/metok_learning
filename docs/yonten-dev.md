@@ -18,7 +18,8 @@ current lesson, load the spec's demo state, or start over.
 |---|---|
 | Lint, unit and widget tests | `cd yonten && flutter analyze && flutter test` |
 | Web build | `cd yonten && flutter build web` |
-| Security rules (15 tests) | `cd firebase/tests && npm install && npm test` |
+| Security rules | `cd firebase/tests && npm install && npm test` |
+| Cloud Functions unit tests | `cd functions && venv/bin/python -m pytest -q tests` |
 | Real Firestore code against the emulators | see "Emulator smoke check" below |
 
 The emulators need **Java 21** (`brew install openjdk@21`). Before any
@@ -36,10 +37,27 @@ Ports are in `firebase.json`:
 | Storage | 9199 |
 | Emulator UI | 4000 |
 
+| Functions | 5001 |
+
 ```sh
-firebase emulators:start --only auth,firestore,storage --project tashi-learn
-functions/.venv/bin/python -I functions/seed_curriculum.py --emulator
+# macOS: these two variables stop the Python Functions emulator crashing (D44)
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES no_proxy='*'
+firebase emulators:start --only auth,firestore,storage,functions --project tashi-learn
+functions/venv/bin/python -I functions/seed_curriculum.py --emulator
+functions/venv/bin/python -I functions/seed_vocab.py --emulator
 ```
+
+The Functions emulator reads secrets from `functions/.secret.local`
+(git-ignored):
+
+```
+GEMINI_API_KEY=...
+MONLAM_API_KEY=...
+```
+
+Run the app against all emulators (real Gemini, local everything else):
+`flutter run -d chrome --dart-define=USE_EMULATORS=true`. To demo scanning
+with no backend at all, add `--dart-define=VISION_MOCK=true`.
 
 ### Emulator smoke check
 
@@ -59,9 +77,18 @@ source of truth. The app bundles them as its offline fallback, and the
 seed scripts upload them.
 
 ```sh
-python3 -m venv functions/.venv && functions/.venv/bin/pip install -r functions/requirements.txt
-functions/.venv/bin/python -I functions/seed_curriculum.py --dry-run
-GOOGLE_APPLICATION_CREDENTIALS=key.json functions/.venv/bin/python -I functions/seed_curriculum.py --project tashi-learn
+/opt/homebrew/bin/python3.13 -m venv functions/venv && functions/venv/bin/pip install -r functions/requirements.txt pytest
+functions/venv/bin/python -I functions/seed_curriculum.py --dry-run
+GOOGLE_APPLICATION_CREDENTIALS=key.json functions/venv/bin/python -I functions/seed_curriculum.py --project tashi-learn
+```
+
+## Deploy functions (needs the Blaze plan)
+
+```sh
+firebase functions:secrets:set GEMINI_API_KEY --project tashi-learn
+firebase functions:secrets:set MONLAM_API_KEY --project tashi-learn
+firebase deploy --only functions --project tashi-learn
+GOOGLE_APPLICATION_CREDENTIALS=key.json functions/venv/bin/python -I functions/seed_vocab.py --project tashi-learn
 ```
 
 ## Deploy rules

@@ -96,6 +96,8 @@ class LocalUserData implements UserDataRepository {
   Future<void> recordScan(FoundWord word) async {
     final words = _list(StoreKeys.localWords);
     final isNew = !words.any((e) => e['id'] == word.id);
+    // A word's card shows the newest photo of it, so a re-find replaces
+    // the old entry (the older photo stays in `photos`).
     final entry = {'id': word.id, ...word.toMap()};
     await _store.write(StoreKeys.localWords, [
       for (final e in words)
@@ -104,6 +106,37 @@ class LocalUserData implements UserDataRepository {
     ]);
     await _saveProfile(
         GameRules.recordScan(_profile, isNewWord: isNew, now: _now()));
+  }
+
+  @override
+  Future<void> recordPhoto(PhotoRecord photo) async {
+    await _store.write(StoreKeys.localPhotos, [
+      for (final e in _list(StoreKeys.localPhotos))
+        if (e['id'] != photo.id) e,
+      {'id': photo.id, ...photo.toMap()},
+    ]);
+    _changes.add(null);
+  }
+
+  @override
+  Stream<List<PhotoRecord>> watchPhotos() => _watch(() => [
+        for (final e in _list(StoreKeys.localPhotos))
+          PhotoRecord.fromMap(e['id'] as String, e),
+      ]..sort((a, b) => b.takenAt.compareTo(a.takenAt)));
+
+  @override
+  Future<void> attachPhotoUrl(String photoId, String url, {String? wordId}) async {
+    await _store.write(StoreKeys.localPhotos, [
+      for (final e in _list(StoreKeys.localPhotos))
+        e['id'] == photoId ? {...e, 'url': url} : e,
+    ]);
+    if (wordId != null) {
+      await _store.write(StoreKeys.localWords, [
+        for (final e in _list(StoreKeys.localWords))
+          e['id'] == wordId && e['photoId'] == photoId ? {...e, 'imageUrl': url} : e,
+      ]);
+    }
+    _changes.add(null);
   }
 
   @override

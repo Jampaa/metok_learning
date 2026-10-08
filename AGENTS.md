@@ -31,8 +31,14 @@ Before changing anything, read:
 ## Non-negotiables
 
 - Only `verified: true` vocabulary items may show a Tibetan string to a
-  user. Don't "fill in" translations yourself. A fluent speaker confirms
-  them.
+  user. Verified means a Monlam dictionary match, an alphabet letter, or a
+  fluent speaker's confirmation (DECISIONS.md D36). Don't "fill in"
+  translations yourself.
+- Gemini only identifies objects (English name, confidence, kid_safe).
+  Tibetan comes from the vocab catalog or Monlam's dictionary, and
+  unverified Tibetan never leaves the server (DECISIONS.md D36).
+- Every photo the child takes is kept, and a word's flash card shows only
+  the child's own photo of it, never drawn art (D37).
 - Gemini-drafted sentences are never shown to a child until a human sets
   `approved: true` in Firestore.
 - No Gemini, Monlam or Firebase Admin secret ever goes in `yonten/` or
@@ -43,5 +49,6 @@ Before changing anything, read:
   fallback rather than break the screen.
 - Small, incremental changes. The app must always build before a change
   counts as done:
-  - `flutter analyze && flutter build web` in `yonten/`
+  - `flutter analyze && flutter test && flutter build web` in `yonten/`
+  - `venv/bin/python -m pytest -q tests` in `functions/`
   - `npm run build` in `frontend/`, until the cutover

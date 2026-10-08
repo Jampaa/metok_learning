@@ -65,6 +65,12 @@ service cloud.firestore {
       allow read, write: if isOwner(uid);
     }
 
+    // Every photo the child takes (DECISIONS.md D37). The image itself is
+    // in Storage at users/{uid}/photos/{photoId}.jpg.
+    match /users/{uid}/photos/{photoId} {
+      allow read, write: if isOwner(uid);
+    }
+
     // ---------- Legacy app (remove at the Phase 10 cutover) ----------
 
     match /vocabulary/{vocabId} {

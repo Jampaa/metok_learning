@@ -33,7 +33,11 @@ GoRouter buildRouter({String? status}) => GoRouter(
             ]),
           ],
         ),
-        GoRoute(path: Routes.scan, builder: (_, _) => const ScannerScreen()),
+        GoRoute(
+          path: Routes.scan,
+          builder: (_, state) =>
+              ScannerScreen(lessonId: state.uri.queryParameters['lesson']),
+        ),
         GoRoute(
           path: Routes.gallery,
           builder: (_, _) => GalleryScreen(status: status),

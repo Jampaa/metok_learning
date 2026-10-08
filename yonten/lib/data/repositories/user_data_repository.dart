@@ -22,6 +22,16 @@ abstract interface class UserDataRepository {
   /// Saves a found word, adds XP, and updates stats and the streak.
   Future<void> recordScan(FoundWord word);
 
+  /// Keeps a record of every photo the child takes (D37).
+  Future<void> recordPhoto(PhotoRecord photo);
+
+  /// Newest first.
+  Stream<List<PhotoRecord>> watchPhotos();
+
+  /// Called once a photo has uploaded: stores its URL on the photo record
+  /// and, if [wordId]'s card uses this photo, on the word too.
+  Future<void> attachPhotoUrl(String photoId, String url, {String? wordId});
+
   Future<void> saveQuests(String date, List<QuestEntry> quests);
   Future<void> addXp(int amount);
   Future<void> updateSettings(UserSettings settings);

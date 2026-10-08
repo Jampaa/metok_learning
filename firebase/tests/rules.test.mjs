@@ -71,6 +71,7 @@ describe('users/{uid}', () => {
     await assertSucceeds(getDoc(doc(alice(), 'users/alice/words/apple')));
     await assertSucceeds(setDoc(doc(alice(), 'users/alice/stickers/chorten'), { fromLessonId: 'unit1-chest-1' }));
     await assertSucceeds(setDoc(doc(alice(), 'users/alice/quests/2026-10-09'), { quests: [] }));
+    await assertSucceeds(setDoc(doc(alice(), 'users/alice/photos/p1'), { status: 'found' }));
   });
 
   test('another user cannot read or write it', async () => {
@@ -78,6 +79,7 @@ describe('users/{uid}', () => {
     await assertFails(getDoc(doc(bob(), 'users/alice/words/apple')));
     await assertFails(setDoc(doc(bob(), 'users/alice'), { xp: 999 }));
     await assertFails(setDoc(doc(bob(), 'users/alice/words/pear'), { english: 'pear' }));
+    await assertFails(getDoc(doc(bob(), 'users/alice/photos/p1')));
     await assertFails(deleteDoc(doc(bob(), 'users/alice')));
   });
 

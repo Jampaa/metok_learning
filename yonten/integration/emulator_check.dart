@@ -2,11 +2,14 @@
 // against the local emulators and prints PASS/FAIL lines.
 //
 //   firebase emulators:start            (repo root, Java 21)
-//   functions/.venv/bin/python -I functions/seed_curriculum.py --emulator
+//   functions/venv/bin/python -I functions/seed_curriculum.py --emulator
 //   cd yonten && flutter run -d chrome -t integration/emulator_check.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image/image.dart' as img;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:yonten/data/curriculum_providers.dart';
 import 'package:yonten/data/local_store.dart';
@@ -14,6 +17,10 @@ import 'package:yonten/data/models/word.dart';
 import 'package:yonten/data/repositories/curriculum_repository.dart';
 import 'package:yonten/data/repositories/firestore_user_data.dart';
 import 'package:yonten/firebase_options.dart';
+import 'package:yonten/services/photo_store.dart';
+import 'package:yonten/services/providers.dart';
+import 'package:yonten/services/scan_flow.dart';
+import 'package:yonten/services/vision_service.dart';
 
 final _lines = <String>[];
 
@@ -28,6 +35,8 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final db = FirebaseFirestore.instance..useFirestoreEmulator('localhost', 8085);
   await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  functionsInstance().useFunctionsEmulator('localhost', 5001);
+  await FirebaseStorage.instance.useStorageEmulator('localhost', 9199);
   final cred = await FirebaseAuth.instance.signInAnonymously();
   final uid = cred.user!.uid;
   _log(true, 'signed in anonymously as $uid');
@@ -80,6 +89,31 @@ Future<void> main() async {
   } on FirebaseException catch (e) {
     _log(e.code == 'permission-denied', 'other user blocked (${e.code})');
   }
+
+  // Scan: the app's own ScanFlow, through the Functions emulator (real
+  // Gemini) and the Storage emulator. A plain gray photo has no object, so
+  // Gemini should say "not sure": a retry, with the photo still kept.
+  final hive2 = MemoryStore();
+  final flow = ScanFlow(
+    vision: FunctionsVisionService(functionsInstance()),
+    repo: repo,
+    photos: PhotoStore(hive2,
+        uploader: FirebasePhotoUploader(FirebaseStorage.instance, uid)),
+    store: hive2,
+  );
+  final gray = img.Image(width: 320, height: 240)..clear(img.ColorRgb8(128, 128, 128));
+  final scan = await flow.scan(Uint8List.fromList(img.encodeJpg(gray)));
+  _log(scan.outcome is ScanRetry, 'blank photo -> ${scan.outcome.runtimeType} via identify_object');
+  await Future<void>.delayed(const Duration(seconds: 2));
+  final photoDoc = (await db.doc('users/$uid/photos/${scan.photoId}')
+          .get(const GetOptions(source: Source.server)))
+      .data();
+  _log(photoDoc?['status'] == 'retry' && (photoDoc?['url'] as String?)?.contains('9199') == true,
+      'photo kept: status=${photoDoc?['status']}, uploaded=${photoDoc?['url'] != null}');
+  final stored = await FirebaseStorage.instance
+      .ref('users/$uid/photos/${scan.photoId}.jpg')
+      .getMetadata();
+  _log(stored.contentType == 'image/jpeg', 'photo in Storage (${stored.size} bytes)');
 
   // Offline. (disableNetwork() doesn't stop transactions in the web SDK,
   // so it can't simulate this.) A second app instance points at a port

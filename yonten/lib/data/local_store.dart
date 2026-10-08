@@ -75,6 +75,9 @@ abstract final class StoreKeys {
   static const localProfile = 'local.profile';
   static const localWords = 'local.words';
   static const localStickers = 'local.stickers';
+  static const localPhotos = 'local.photos';
+  static const photoUploads = 'queue.photoUploads';
+  static String photoBytes(String id) => 'photo.$id';
   static String localQuests(String date) => 'local.quests.$date';
 }
 

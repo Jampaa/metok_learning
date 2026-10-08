@@ -1,18 +1,96 @@
 {
   "_comment": "Starter vocab. Tibetan comes from the spec; every entry stays verified:false until a fluent speaker confirms it (AGENTS.md, DECISIONS.md D4). Phonetics are left empty on purpose: they must come from a speaker, not be invented.",
   "vocab": [
-    {"id": "apple", "english": "apple", "tibetan": "ཀུ་ཤུ", "phonetic": "", "picture": "obj-apple", "verified": false},
-    {"id": "door", "english": "door", "tibetan": "སྒོ", "phonetic": "", "picture": "obj-door", "verified": false},
-    {"id": "water", "english": "water", "tibetan": "ཆུ", "phonetic": "", "picture": "obj-water", "verified": false},
-    {"id": "sun", "english": "sun", "tibetan": "ཉི་མ", "phonetic": "", "picture": "obj-sun", "verified": false},
-    {"id": "letter-ka", "english": "ka", "tibetan": "ཀ", "phonetic": "", "verified": false},
-    {"id": "letter-kha", "english": "kha", "tibetan": "ཁ", "phonetic": "", "verified": false},
-    {"id": "letter-ga", "english": "ga", "tibetan": "ག", "phonetic": "", "verified": false},
-    {"id": "letter-nga", "english": "nga", "tibetan": "ང", "phonetic": "", "verified": false},
-    {"id": "letter-ca", "english": "ca", "tibetan": "ཅ", "phonetic": "", "verified": false},
-    {"id": "letter-cha", "english": "cha", "tibetan": "ཆ", "phonetic": "", "verified": false},
-    {"id": "letter-ja", "english": "ja", "tibetan": "ཇ", "phonetic": "", "verified": false},
-    {"id": "letter-nya", "english": "nya", "tibetan": "ཉ", "phonetic": "", "verified": false},
-    {"id": "letter-ta", "english": "ta", "tibetan": "ཏ", "phonetic": "", "verified": false}
+    {
+      "id": "apple",
+      "english": "apple",
+      "tibetan": "ཀུ་ཤུ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "door",
+      "english": "door",
+      "tibetan": "སྒོ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "water",
+      "english": "water",
+      "tibetan": "ཆུ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "sun",
+      "english": "sun",
+      "tibetan": "ཉི་མ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-ka",
+      "english": "ka",
+      "tibetan": "ཀ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-kha",
+      "english": "kha",
+      "tibetan": "ཁ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-ga",
+      "english": "ga",
+      "tibetan": "ག",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-nga",
+      "english": "nga",
+      "tibetan": "ང",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-ca",
+      "english": "ca",
+      "tibetan": "ཅ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-cha",
+      "english": "cha",
+      "tibetan": "ཆ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-ja",
+      "english": "ja",
+      "tibetan": "ཇ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-nya",
+      "english": "nya",
+      "tibetan": "ཉ",
+      "phonetic": "",
+      "verified": false
+    },
+    {
+      "id": "letter-ta",
+      "english": "ta",
+      "tibetan": "ཏ",
+      "phonetic": "",
+      "verified": false
+    }
   ]
 }

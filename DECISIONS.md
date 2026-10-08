@@ -205,3 +205,92 @@ instant cold start; `cache.audioPaths` is for Phase 6.
 Firestore emulator runs on port 8085 because Flutter web uses 8080. The
 rules tests live in `firebase/tests` and use Node's test runner with
 `@firebase/rules-unit-testing`. Commands are in `docs/yonten-dev.md`.
+
+## Phases 5 and 6
+
+**D36. Which Tibetan a child may see (revises D3 and D4).** A strict "a
+person must check every word" rule would mean a real scan never shows
+Tibetan. We follow the legacy backend instead (`backend/app/routes/discovery.py`)
+and `docs/architecture.md`, where Monlam's dictionary is the authoritative
+source:
+- A Monlam dictionary match is `verified: true` (`source: monlam_dictionary`).
+- A Monlam LLM guess is stored `verified: false` (`source: monlam_llm`)
+  and is never sent to the app: the function blanks unverified Tibetan on
+  the server, and the app blanks it again.
+- Alphabet letters are `verified: true` (`source: alphabet`); a letter
+  isn't a translation.
+- The four spec seed words are verified only if Monlam's dictionary agrees
+  with the spec's spelling. Otherwise the dictionary's answer is saved as
+  `dictionaryTibetan` for a teacher.
+- An unverified find still counts (XP, streak, Backpack) and shows English
+  plus "We'll learn this one in Tibetan soon!".
+
+**D37. Every photo is kept; cards show only the child's photo (owner's
+request, overrides spec §8.1).** Every shutter press, whatever the result,
+is saved:
+- on the device (Hive, newest 80 kept once uploaded);
+- in Storage at `users/{uid}/photos/{photoId}.jpg` (at most 1024 px, JPEG
+  quality 82, under the 2 MB rule);
+- as a record in `users/{uid}/photos/{photoId}` with status found / retry
+  / queued.
+
+A word's card (scanner result card, Backpack in Phase 7) shows the child's
+newest photo of that word and nothing else: `WordPhoto` uses the device
+copy, then the uploaded copy, then a plain paper tile. Never drawn art.
+Older photos of the same word stay in `photos`. The `keepPhotos` parent
+setting is removed. Privacy follow-up for Phase 11b: these are photos
+taken in a child's home, so the parent area needs a "delete my child's
+photos" control, and the privacy policy and store forms must say photos
+are stored.
+
+**D38. Photos go to Storage from the app, not through the function.** The
+app uploads the photo itself and sends the same JPEG (base64) to
+`identify_object`, which never stores it. Uploads that fail wait in a
+queue and retry.
+
+**D39. A scan from the map completes the lesson.** The active node opens
+the scanner with `?lesson=<id>`. A find (not a retry) completes that
+lesson, forward only. The spec has no separate letter-lesson screen; one
+can come later (Phase 12).
+
+**D40. Offline and failure behavior.**
+- No connection, or the function isn't reachable: the scan is queued
+  ("Yonten will check this when we're back online") and retried at startup
+  and every 90 s, along with queued photo uploads.
+- Low confidence, not kid-safe (people, weapons, medicine, etc.) or any
+  server error: "Hmm, let's try again!". The child never sees an error.
+- The mock vision service (cycles through starter words) runs only with
+  `--dart-define=VISION_MOCK=true` or in tests. It is never a silent
+  fallback, because naming the wrong object teaches the wrong word.
+
+**D41. Gemini.** `gemini-3.8-flash` (it's on the key's model list as of
+2026-10-09), with `gemini-3.6-flash` as a fallback used only when the
+main model answers 503 (busy) or 429. Both are params in `functions/.env`.
+Gemini returns only `{english, category, confidence, kid_safe}`, never
+Tibetan (D2). The prompt asks for the container, not its contents ("a cup
+of tea is 'cup'").
+
+**D42. Audio is WAV, not MP3.** Monlam's TTS only returns `audio/wav`
+(checked in its OpenAPI spec), and Cloud Functions has no encoder. A
+one-word WAV is small. Files live at `audio/{wordId}.wav` with a one-year
+cache header. Only verified words get audio. `TtsProvider` has Monlam and
+a stub (silent clip) for when no key is set.
+
+**D43. App Check is not enforced yet.** `ENFORCE_APP_CHECK = False` in
+`functions/main.py`. Enforcing it before the web app registers a reCAPTCHA
+Enterprise key would block every call. Phase 9 turns it on.
+
+**D44. Functions toolchain.** Python 3.13 venv at `functions/venv` (the
+CLI requires that path and the runtime version), runtime `python313`.
+Non-secret params are in `functions/.env`; secrets go in Secret Manager in
+production, or `functions/.secret.local` (git-ignored) for the emulator.
+On macOS the Functions emulator needs `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
+and `no_proxy='*'`, or forked workers crash. Production (Linux) is not
+affected.
+
+**D45. Monlam quota (blocking).** As of 2026-10-09 every Monlam endpoint
+(dictionary, chat, TTS) returns 402 "Project quota has expired". Until
+the owner renews it, scans still find objects in English, but no new word
+can be verified and no audio can be generated. Everything retries
+automatically once the quota is back. After that, rerun
+`seed_vocab.py`.

@@ -6,11 +6,11 @@ app bundles as its offline fallback, so the two never drift apart.
 Usage (from the repo root):
 
   # Local emulator (start it with `firebase emulators:start`):
-  functions/.venv/bin/python -I functions/seed_curriculum.py --emulator
+  functions/venv/bin/python -I functions/seed_curriculum.py --emulator
 
   # Production. Needs Admin credentials, e.g. a service-account key:
   GOOGLE_APPLICATION_CREDENTIALS=/path/key.json \
-      functions/.venv/bin/python -I functions/seed_curriculum.py --project tashi-learn
+      functions/venv/bin/python -I functions/seed_curriculum.py --project tashi-learn
 
 Re-running is safe: each chapter doc is overwritten with the file's content.
 Chapters that are no longer in the file are left alone (use --prune to

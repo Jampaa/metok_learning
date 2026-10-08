@@ -26,5 +26,6 @@ firestore-debug.log
 ui-debug.log
 
 # Python functions venv
-functions/.venv/
+functions/venv/
 functions/__pycache__/
+functions/.secret.local

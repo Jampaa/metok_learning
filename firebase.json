@@ -34,6 +34,24 @@
       "enabled": true,
       "port": 4000
     },
-    "singleProjectMode": true
-  }
+    "singleProjectMode": true,
+    "functions": {
+      "port": 5001
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "python313",
+      "ignore": [
+        "venv",
+        ".secret.local",
+        "tests",
+        "__pycache__",
+        "*.log",
+        ".pytest_cache"
+      ]
+    }
+  ]
 }
