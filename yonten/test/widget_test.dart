@@ -42,7 +42,7 @@ String shownFrame(WidgetTester tester) {
 void main() {
   testWidgets('opens on the map with the nav and pills', (tester) async {
     await pumpApp(tester);
-    expect(find.text('Treasure map coming next'), findsOneWidget);
+    expect(find.byKey(const ValueKey('node-unit1-nga')), findsOneWidget);
     for (final label in ['Map', 'Backpack', 'Scan', 'Quests', 'Me']) {
       expect(find.text(label), findsOneWidget);
     }
@@ -79,7 +79,7 @@ void main() {
 
     await tester.tap(find.bySemanticsLabel('Close'));
     await tester.pumpAndSettle();
-    expect(find.text('Treasure map coming next'), findsOneWidget);
+    expect(find.byKey(const ValueKey('node-unit1-nga')), findsOneWidget);
   });
 
   testWidgets('wave plays a, b, a, b, a then returns to idle', (tester) async {

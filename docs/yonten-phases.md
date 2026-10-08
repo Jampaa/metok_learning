@@ -76,13 +76,13 @@ disagree. Each one gets logged in `DECISIONS.md` in Phase 0.
 
 **Goal:** the hero screen, fully animated, driven by a local curriculum.
 
-- [ ] Data models `Chapter`, `Lesson` and `Progress` (§7 shapes), with a `CurriculumRepository` interface and a local implementation seeded with chapter 1.
-- [ ] Sky band layers, mountain parallax, cloud drift, and the thangka swing with its live text overlay.
-- [ ] The dirt-path `CustomPainter` (ink stroke, then cream stroke, then golden footsteps).
-- [ ] Node layout generated per cluster (the winding pattern repeats), with a thangka at the start of each cluster.
-- [ ] Node states: completed, active (pulse ring and START bubble), locked, and the chest every `chestInterval` nodes (config value).
-- [ ] Tap behaviors and the 2.8 s sticker toast. The chest opens with confetti, stays open, and grants a sticker (local).
-- [ ] Prayer flags, chorten, and Yonten beside the active node.
+- [x] Data models `Chapter`, `Lesson` and `Progress` (§7 shapes), with a `CurriculumRepository` interface and a local implementation seeded with chapter 1.
+- [x] Sky band layers, mountain parallax, cloud drift, and the thangka swing with its live text overlay.
+- [x] The dirt-path `CustomPainter` (ink stroke, then cream stroke, then golden footsteps).
+- [x] Node layout generated per cluster (the winding pattern repeats), with a thangka at the start of each cluster.
+- [x] Node states: completed, active (pulse ring and START bubble), locked, and the chest every `chestInterval` nodes (config value).
+- [x] Tap behaviors and the 2.8 s sticker toast. The chest opens with confetti, stays open, and grants a sticker (local).
+- [x] Prayer flags, chorten, and Yonten beside the active node.
 
 **Done when:** the map matches the design artifact, works offline, and progress can only move forward.
 

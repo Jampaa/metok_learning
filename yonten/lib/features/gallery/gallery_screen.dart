@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/curriculum_providers.dart';
 import '../../theme/colors.dart';
 import '../../theme/text.dart';
 import '../../widgets/ink_icons.dart';
@@ -64,6 +65,37 @@ class GalleryScreen extends ConsumerWidget {
                   color: YColors.white,
                   onPressed: () =>
                       ref.read(reducedMotionOverrideProvider.notifier).toggle(),
+                ),
+                _section('Map progress (debug)'),
+                Wrap(spacing: 10, runSpacing: 10, children: [
+                  ToyButton(
+                    semanticLabel: 'Complete the current lesson',
+                    label: 'Complete current lesson',
+                    color: YColors.yellow,
+                    onPressed: () {
+                      final current = ref.read(progressProvider).currentLessonId;
+                      final ordered = lessonsInOrder(
+                          ref.read(curriculumProvider).value ?? const []);
+                      if (current != null) {
+                        ref.read(progressProvider.notifier).complete(current, ordered);
+                      }
+                    },
+                  ),
+                  ToyButton(
+                    semanticLabel: 'Reset map progress to the demo start',
+                    label: 'Reset demo',
+                    color: YColors.white,
+                    onPressed: () {
+                      ref.read(progressProvider.notifier).debugReset();
+                      ref.read(stickersProvider.notifier).debugReset();
+                    },
+                  ),
+                ]),
+                const SizedBox(height: 6),
+                Text(
+                  'Current: ${ref.watch(progressProvider).currentLessonId ?? 'all done'} · '
+                  'stickers: ${ref.watch(stickersProvider).map((s) => s.id).join(', ')}',
+                  style: YText.text(13, color: YColors.muted),
                 ),
                 _section('Colors'),
                 const _Swatches(),

@@ -54,6 +54,27 @@ abstract final class YText {
         height: 1.35,
         color: color,
       );
+
+  static final _tibetanRun = RegExp(r'[\u0F00-\u0FFF]+');
+
+  /// Text that mixes English and Tibetan, e.g. "Let's practice ཀ again!".
+  /// Tibetan runs get Jomolhari (never bold) at a slightly larger size so
+  /// the stacked letters line up visually with the Latin text.
+  static TextSpan mixed(String text, TextStyle base, {Color? tibetanColor}) {
+    final spans = <TextSpan>[];
+    var last = 0;
+    for (final m in _tibetanRun.allMatches(text)) {
+      if (m.start > last) spans.add(TextSpan(text: text.substring(last, m.start)));
+      spans.add(TextSpan(
+        text: m.group(0),
+        style: tibetan((base.fontSize ?? 16) * 1.15,
+            color: tibetanColor ?? base.color ?? YColors.ink),
+      ));
+      last = m.end;
+    }
+    if (last < text.length) spans.add(TextSpan(text: text.substring(last)));
+    return TextSpan(style: base, children: spans);
+  }
 }
 
 ThemeData yontenTheme() {

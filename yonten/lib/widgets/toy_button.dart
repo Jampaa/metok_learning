@@ -19,6 +19,7 @@ class ToyButton extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     this.expand = false,
     this.border = 2,
+    this.muted = false,
   }) : assert(child != null || label != null);
 
   /// Read by screen readers. Required: every tappable has a label (§4).
@@ -39,6 +40,10 @@ class ToyButton extends StatefulWidget {
   /// Outline width (the shutter and Scan button use 2.5–3 px).
   final double border;
 
+  /// Uses the disabled colors but still takes taps, e.g. a locked map
+  /// node that answers with a gentle "opens soon" message.
+  final bool muted;
+
   @override
   State<ToyButton> createState() => _ToyButtonState();
 }
@@ -55,19 +60,20 @@ class _ToyButtonState extends State<ToyButton> {
   @override
   Widget build(BuildContext context) {
     final enabled = _enabled;
+    final looksEnabled = enabled && !widget.muted;
     final content = widget.child ??
         Text(
           widget.label!,
           textAlign: TextAlign.center,
           style: YText.label(
             18,
-            color: enabled ? YColors.ink : YColors.disabledText,
+            color: looksEnabled ? YColors.ink : YColors.disabledText,
           ),
         );
 
     Widget surface = ToySurface(
-      color: enabled ? widget.color : YColors.disabledFill,
-      edgeColor: enabled ? YColors.ink : YColors.disabledBorder,
+      color: looksEnabled ? widget.color : YColors.disabledFill,
+      edgeColor: looksEnabled ? YColors.ink : YColors.disabledBorder,
       circle: widget.circle,
       radius: widget.radius,
       pressed: _pressed,

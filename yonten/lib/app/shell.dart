@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/map/map_screen.dart';
 import '../theme/layout.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/stat_pills.dart';
@@ -8,7 +10,7 @@ import 'routes.dart';
 
 /// The tab shell: the current tab's screen above the 88 px bottom nav, plus
 /// the streak and words pills on the Map and Backpack only (spec §5).
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
@@ -21,7 +23,7 @@ class AppShell extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final index = navigationShell.currentIndex;
     final media = MediaQuery.of(context);
     final navSpace = YLayout.navHeight + media.padding.bottom;
@@ -52,10 +54,12 @@ class AppShell extends StatelessWidget {
             child: BottomNav(
               tabs: tabs,
               currentIndex: index,
-              onSelect: (i) => navigationShell.goBranch(
-                i,
-                initialLocation: i == index,
-              ),
+              onSelect: (i) {
+                if (i == 0 && index != 0) {
+                  ref.read(mapVisitsProvider.notifier).visited();
+                }
+                navigationShell.goBranch(i, initialLocation: i == index);
+              },
               onScan: () => context.push(Routes.scan),
             ),
           ),

@@ -118,3 +118,41 @@ the name.
 མིག་འཕྲུལ།) are copied verbatim from the spec. They're UI labels, not
 vocabulary, but they still go on the fluent-speaker check list with the
 seed words (D4).
+
+## Phase 3
+
+**D24. "Start!" instead of "START".** Spec §4 bans uppercase labels and
+asks for sentence case, so the bubble says "Start!". It's short enough to
+fit at the spec's position (304, 368) without running off the 400 px
+frame.
+
+**D25. Chest placement is data, with a config for new chapters.** Chapter
+1 is hand-placed exactly as in spec §7 (ཀ ཁ ག ང, chest, ཅ ཆ ཇ ཉ ཏ). A
+strict "every 5 nodes" rule would also put a chest at node 10 and push ཏ
+to node 11. `CurriculumConfig.chestInterval` (5) and `lettersWithChests()`
+are for authoring later chapters. The map draws whatever the data says.
+
+**D26. Map behavior details.**
+- Tapping a chest early (demo) completes the chest without moving the
+  current lesson, so ང stays active and the chest is skipped later.
+  Reaching an unopened chest opens it automatically.
+- The map scrolls on open just far enough to show the active node, and
+  keeps the sky band in view.
+- Later chapters start after a 320 px gap holding a 140 px chapter
+  thangka on the side away from the path. The node pattern continues.
+- Yonten and the bubble mirror to the other side of the active node when
+  it's near the edge.
+- "Map opens" replays (Yonten waves, thangka swings) every time the child
+  switches back to the Map tab.
+- The guidebook button shows which workbook pages the unit matches.
+- Opening a chest plays crouch → cheer-jump → cheer-land. Phase 5 adds
+  the full celebrate motion.
+
+**D27. Workbook pages are placeholders.** Chapter 1 says workbook chapter
+1, pages 1–6. The real chapter and page numbers need to come from the
+author's mother's workbook.
+
+**D28. Map progress is in memory for now.** Progress and stickers reset
+when the app reloads until Phase 4 stores them in Firestore and Hive. The
+gallery has debug buttons to complete the current lesson and to reset
+the demo.
