@@ -73,3 +73,23 @@ This is a deliberate, narrower version of Section 25's original "never
 store camera images" rule — the image is tied to the discovered word, not
 to the child, and only the single best photo of each word is ever kept
 (re-scanning the same object doesn't add more copies).
+
+## Yonten rebuild (Flutter + Firebase)
+
+The app is moving to Flutter (`yonten/`) and Python Cloud Functions
+(`functions/`). See `docs/yonten-phases.md`. The principle above doesn't
+change (`DECISIONS.md` D2):
+
+```
+Flutter app (yonten/)
+  -> Firebase Auth (anonymous first, linked by a parent later)
+  -> Firestore (users/{uid}/**, read-only vocab + curriculum), offline persistence
+  -> Hive (profile snapshot, settings, audio paths) for instant cold start
+  -> callable identify_object (App Check)
+       Gemini Flash   -> English name + confidence + kid_safe only
+       vocab catalog  -> verified Tibetan, if we already have it
+       Monlam dict    -> candidate Tibetan for new words (verified: false)
+       get_word_audio -> Monlam TTS -> Storage audio/{wordId}.mp3
+```
+
+The legacy request flow above stays live until the Phase 10 cutover.

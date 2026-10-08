@@ -1,5 +1,13 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider, signInAnonymously, signInWithPopup, signOut, type Auth } from 'firebase/auth'
+import {
+  getAuth,
+  getRedirectResult,
+  GoogleAuthProvider,
+  signInAnonymously,
+  signInWithRedirect,
+  signOut,
+  type Auth,
+} from 'firebase/auth'
 import { getFirestore, type Firestore } from 'firebase/firestore'
 
 const config = {
@@ -36,11 +44,27 @@ export async function ensureAnonymousSignIn() {
  * Google sign-in — for a parent/returning user who wants progress synced
  * across devices, rather than the default anonymous per-device flow
  * (Section 24: kids shouldn't need a signup screen, so this stays optional).
+ *
+ * Uses a full-page redirect rather than a popup — popups are unreliable on
+ * desktop browsers specifically (blocked by popup blockers, ad blockers,
+ * or third-party-cookie restrictions in Safari/Firefox/Chrome, all
+ * intermittently depending on the browser's mood), which is exactly the
+ * "works on mobile, flaky on laptop" symptom this replaces. Redirect
+ * navigates the whole page to Google and back — slower, but doesn't
+ * depend on cross-window communication at all, so it doesn't have that
+ * failure mode. Completing the flow after the redirect back is handled by
+ * handleGoogleRedirectResult(), called once on app load (see Welcome.tsx).
  */
 export async function signInWithGoogle() {
+  if (!auth) return
+  await signInWithRedirect(auth, new GoogleAuthProvider())
+}
+
+/** Call once on app load to complete a signInWithGoogle() redirect that just returned. */
+export async function handleGoogleRedirectResult() {
   if (!auth) return null
-  const credential = await signInWithPopup(auth, new GoogleAuthProvider())
-  return credential.user
+  const credential = await getRedirectResult(auth)
+  return credential?.user ?? null
 }
 
 /** Signs out entirely. No-ops when Firebase isn't configured. */

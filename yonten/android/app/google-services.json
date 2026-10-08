@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "949191680600",
+    "project_id": "tashi-learn",
+    "storage_bucket": "tashi-learn.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949191680600:android:019558bdbf1a052074e02d",
+        "android_client_info": {
+          "package_name": "org.gtpn.yonten"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "949191680600-a9991poqs73q7lsn5hta6ka7r7q9qi5s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDESbXtIL1SE3U5bLvOW9lmMImDt3nWULs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "949191680600-a9991poqs73q7lsn5hta6ka7r7q9qi5s.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "949191680600-ke3a7bg5r8s55371aurn1mlm16v76iam.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.gtpn.yonten"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

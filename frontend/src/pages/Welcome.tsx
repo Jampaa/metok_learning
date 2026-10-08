@@ -1,11 +1,33 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
-import { ensureAnonymousSignIn, isFirebaseConfigured, signInWithGoogle } from '../firebase/client'
+import {
+  ensureAnonymousSignIn,
+  handleGoogleRedirectResult,
+  isFirebaseConfigured,
+  signInWithGoogle,
+} from '../firebase/client'
 
 export function Welcome() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
+  const [checkingRedirect, setCheckingRedirect] = useState(isFirebaseConfigured)
+
+  // Completes the signInWithGoogle() redirect flow — the page fully
+  // navigated away to Google and back, so this runs once on load to pick
+  // up the result rather than getting it as a return value from a click handler.
+  useEffect(() => {
+    if (!isFirebaseConfigured) return
+    handleGoogleRedirectResult()
+      .then((user) => {
+        if (user) navigate('/home')
+      })
+      .catch((err) => {
+        console.error('Google sign-in failed:', err)
+        setError("Couldn't sign in with Google — try again, or just start below.")
+      })
+      .finally(() => setCheckingRedirect(false))
+  }, [navigate])
 
   const start = async () => {
     if (isFirebaseConfigured) {
@@ -21,14 +43,22 @@ export function Welcome() {
   const startWithGoogle = async () => {
     setError(null)
     try {
-      await signInWithGoogle()
-      navigate('/home')
+      await signInWithGoogle() // navigates away to Google — nothing after this line runs
     } catch (err) {
-      // Surface the real Firebase error code in the console — the on-screen
-      // message stays friendly/generic, but check devtools for the actual cause.
       console.error('Google sign-in failed:', err)
       setError("Couldn't sign in with Google — try again, or just start below.")
     }
+  }
+
+  if (checkingRedirect) {
+    // Briefly shown right after bouncing back from Google — avoids a flash
+    // of the sign-in buttons before we know whether it actually succeeded.
+    return (
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="text-6xl">🐂</div>
+        <p className="text-ink/50">Signing you in...</p>
+      </div>
+    )
   }
 
   return (
