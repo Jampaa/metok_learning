@@ -10,6 +10,7 @@ class UserProfile {
     this.stats = const Stats(),
     this.progress = MapProgress.start,
     this.settings = const UserSettings(),
+    this.activeDates = const [],
   });
 
   final String displayName;
@@ -19,6 +20,12 @@ class UserProfile {
   final Stats stats;
   final MapProgress progress;
   final UserSettings settings;
+
+  /// Recent days (local `yyyy-mm-dd`, oldest first) with at least one scan
+  /// or finished lesson. Drives the "This week" butter lamps.
+  final List<String> activeDates;
+
+  static const keepActiveDates = 14;
 
   static const xpPerLevel = 100;
   static int levelFor(int xp) => 1 + xp ~/ xpPerLevel;
@@ -30,6 +37,7 @@ class UserProfile {
     Stats? stats,
     MapProgress? progress,
     UserSettings? settings,
+    List<String>? activeDates,
   }) {
     final newXp = xp ?? this.xp;
     return UserProfile(
@@ -40,6 +48,7 @@ class UserProfile {
       stats: stats ?? this.stats,
       progress: progress ?? this.progress,
       settings: settings ?? this.settings,
+      activeDates: activeDates ?? this.activeDates,
     );
   }
 
@@ -51,6 +60,7 @@ class UserProfile {
         'stats': stats.toMap(),
         'progress': progress.toMap(),
         'settings': settings.toMap(),
+        'activeDates': activeDates,
       };
 
   /// Tolerant of missing fields (old docs, legacy `users/{uid}` docs).
@@ -71,6 +81,9 @@ class UserProfile {
           ? MapProgress.start
           : MapProgress.fromMap(sub('progress')!),
       settings: UserSettings.fromMap(sub('settings')),
+      activeDates: [
+        for (final d in (m['activeDates'] as List?) ?? const []) d as String,
+      ],
     );
   }
 }

@@ -71,6 +71,12 @@ Future<void> main() async {
   _log(stats['words'] == 1 && stats['hunts'] == 2, 'duplicate word counted once (words=${stats['words']}, hunts=${stats['hunts']})');
   _log(user['xp'] == 20, 'xp=${user['xp']}');
   _log((user['streak'] as Map)['count'] == 1, 'streak=${(user['streak'] as Map)['count']}');
+  final today = DateTime.now();
+  final dk = '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+  final quests = (await db.doc('users/$uid/quests/$dk').get(const GetOptions(source: Source.server))).data();
+  final qp = [for (final q in (quests?['quests'] as List? ?? const [])) (q as Map)['progress']];
+  _log(qp.length == 3 && qp[0] == 2 && qp[1] == 1 && qp[2] == 20, 'quests updated in the scan transaction: $qp');
+  await repo.claimQuest(dk, 'find');
   final stickers = await db.collection('users/$uid/stickers').get(const GetOptions(source: Source.server));
   _log(stickers.docs.map((d) => d.id).toList().join(',') == 'chorten', 'sticker granted once: ${stickers.docs.map((d) => d.id).toList()}');
 
@@ -142,7 +148,7 @@ Future<void> main() async {
           (local['completedLessonIds'] as List).contains('unit1-kha') &&
           local['currentLessonId'] == 'unit1-ga',
       'offline: lesson saved locally (current=${local?['currentLessonId']}) '
-      'after the $returnedAfter ms server timeout');
+      '(the server call failed after $returnedAfter ms)');
 
   debugPrint('EMULATOR_CHECK DONE ${_lines.where((l) => l.startsWith('FAIL')).isEmpty ? 'ALL PASS' : 'FAILURES'}');
   runApp(MaterialApp(home: Scaffold(body: ListView(children: [for (final l in _lines) Text(l)]))));

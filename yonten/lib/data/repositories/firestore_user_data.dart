@@ -13,11 +13,15 @@ import 'user_data_repository.dart';
 /// `users/{uid}/**` in Firestore. Offline persistence is on, so reads come
 /// from the local cache when there's no connection and writes queue up.
 ///
-/// Progress and streak updates run in a transaction (spec §7). Transactions
-/// need the server, so when one can't complete (offline), the same change
-/// is written as a merge computed from the cached profile. That write is
-/// still forward-only: completed lessons are added with arrayUnion, never
-/// replaced.
+/// Progress, streak and quest updates run in a transaction (spec §7).
+/// Transactions need the server, so when one fails (offline), the same
+/// change is written as a merge computed from the cached profile. That
+/// write is still forward-only: completed lessons are added with
+/// arrayUnion, never replaced.
+///
+/// The fallback only runs when the transaction has actually failed, never
+/// on a timer: a slow transaction can still commit, and racing it would
+/// count the same scan twice (found by the emulator check).
 class FirestoreUserData implements UserDataRepository {
   FirestoreUserData({
     required FirebaseFirestore db,
@@ -32,10 +36,6 @@ class FirestoreUserData implements UserDataRepository {
   final String uid;
   final KeyValueStore _cache;
   final DateTime Function() _now;
-
-  /// How long to wait for the server before writing from the cache
-  /// instead, so a bad connection never stalls the map for long.
-  static const _txTimeout = Duration(seconds: 3);
 
   @override
   String get mode => 'firestore';
@@ -95,6 +95,7 @@ class FirestoreUserData implements UserDataRepository {
         'level': after.level,
         'xp': after.xp,
         'streak': after.streak.toMap(),
+        'activeDates': after.activeDates,
         'stats': after.stats.toMap(),
         'progress': {
           'currentLessonId': after.progress.currentLessonId,
@@ -135,7 +136,7 @@ class FirestoreUserData implements UserDataRepository {
         if (stickerSnap != null && !stickerSnap.exists) {
           tx.set(_stickers.doc(sticker), _stickerDoc(lesson));
         }
-      }).timeout(_txTimeout);
+      });
     } catch (_) {
       final before = await _cachedProfile();
       final after = GameRules.completeLesson(before, lesson, ordered, _now());
@@ -156,21 +157,33 @@ class FirestoreUserData implements UserDataRepository {
         'foundAt': Timestamp.fromDate(w.foundAt),
       };
 
+  List<QuestEntry>? _questsFrom(Map<String, dynamic>? data) {
+    final list = data?['quests'];
+    if (list is! List) return null;
+    return [for (final e in list) QuestEntry.fromMap(Map<String, dynamic>.from(e as Map))];
+  }
+
+  Map<String, dynamic> _questsDoc(List<QuestEntry> qs) =>
+      {'quests': [for (final q in qs) q.toMap()]};
+
   @override
   Future<void> recordScan(FoundWord word) async {
+    final today = dateKey(_now());
     try {
       await _db.runTransaction((tx) async {
         final snap = await tx.get(_user);
         final wordSnap = await tx.get(_words.doc(word.id));
-        final after = GameRules.recordScan(
-          UserProfile.fromMap(snap.data()),
-          isNewWord: !wordSnap.exists,
-          now: _now(),
-        );
-        tx.set(_user, _profileWrite(after, addCompleted: null)..remove('progress'),
-            SetOptions(merge: true));
+        final questSnap = await tx.get(_quests(today));
+        final before = UserProfile.fromMap(snap.data());
+        final isNew = !wordSnap.exists;
+        final after = GameRules.recordScan(before, isNewWord: isNew, now: _now());
+        final quests = _questsFrom(questSnap.data()) ??
+            GameRules.defaultQuests(dailyGoal: before.settings.dailyGoal);
+        tx.set(_user, _profileWrite(after)..remove('progress'), SetOptions(merge: true));
         tx.set(_words.doc(word.id), _wordDoc(word));
-      }).timeout(_txTimeout);
+        tx.set(_quests(today),
+            _questsDoc(GameRules.questsAfterScan(quests, isNewWord: isNew)));
+      });
     } catch (_) {
       bool isNew;
       try {
@@ -180,13 +193,49 @@ class FirestoreUserData implements UserDataRepository {
       } catch (_) {
         isNew = true;
       }
-      final after = GameRules.recordScan(await _cachedProfile(),
-          isNewWord: isNew, now: _now());
+      List<QuestEntry>? quests;
+      try {
+        quests = _questsFrom(
+            (await _quests(today).get(const GetOptions(source: Source.cache))).data());
+      } catch (_) {}
+      final before = await _cachedProfile();
+      final after = GameRules.recordScan(before, isNewWord: isNew, now: _now());
+      quests ??= GameRules.defaultQuests(dailyGoal: before.settings.dailyGoal);
       final batch = _db.batch()
-        ..set(_user, _profileWrite(after)..remove('progress'),
-            SetOptions(merge: true))
-        ..set(_words.doc(word.id), _wordDoc(word));
+        ..set(_user, _profileWrite(after)..remove('progress'), SetOptions(merge: true))
+        ..set(_words.doc(word.id), _wordDoc(word))
+        ..set(_quests(today),
+            _questsDoc(GameRules.questsAfterScan(quests, isNewWord: isNew)));
       unawaited(batch.commit());
+    }
+  }
+
+  @override
+  Future<void> claimQuest(String date, String questId) async {
+    try {
+      await _db.runTransaction((tx) async {
+        final q = await tx.get(_quests(date));
+        final before = _questsFrom(q.data());
+        if (before == null) return;
+        final after = GameRules.claim(before, questId);
+        if (identical(after, before)) return;
+        tx.set(_quests(date), _questsDoc(after));
+        tx.set(_user, {'xp': FieldValue.increment(GameRules.questReward)},
+            SetOptions(merge: true));
+      });
+    } catch (_) {
+      try {
+        final before = _questsFrom(
+            (await _quests(date).get(const GetOptions(source: Source.cache))).data());
+        if (before == null) return;
+        final after = GameRules.claim(before, questId);
+        if (identical(after, before)) return;
+        final batch = _db.batch()
+          ..set(_quests(date), _questsDoc(after))
+          ..set(_user, {'xp': FieldValue.increment(GameRules.questReward)},
+              SetOptions(merge: true));
+        unawaited(batch.commit());
+      } catch (_) {}
     }
   }
 
@@ -241,6 +290,11 @@ class FirestoreUserData implements UserDataRepository {
     unawaited(_user.set({'settings': settings.toMap()}, SetOptions(merge: true)));
   }
 
+  @override
+  Future<void> updateName(String name) async {
+    unawaited(_user.set({'displayName': name.trim()}, SetOptions(merge: true)));
+  }
+
   Future<void> _deleteAll(CollectionReference<Map<String, dynamic>> c) async {
     final docs = await c.get();
     for (final d in docs.docs) {
@@ -267,6 +321,7 @@ class FirestoreUserData implements UserDataRepository {
       progress: demoProgress,
       stats: Stats(words: words.length, lessons: demoProgress.completed.length),
       streak: Streak(count: 3, lastActiveDate: dateKey(_now())),
+      activeDates: demoActiveDates(_now()),
       xp: words.length * GameRules.xpPerWord,
     );
     final batch = _db.batch()..set(_user, demo.toMap());

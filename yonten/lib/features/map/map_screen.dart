@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/routes.dart';
+import '../../app/tab_visits.dart';
 import '../../data/curriculum_providers.dart';
 import '../../data/models/curriculum.dart';
 import '../../services/providers.dart';
@@ -21,17 +22,6 @@ import 'sky_band.dart';
 import 'start_bubble.dart';
 import 'thangka_banner.dart';
 import 'trail_painter.dart';
-
-/// Bumped by the shell whenever the child switches to the Map tab, so the
-/// map can replay its "opened" moments (Yonten waves, thangka swings).
-class MapVisits extends Notifier<int> {
-  @override
-  int build() => 0;
-
-  void visited() => state++;
-}
-
-final mapVisitsProvider = NotifierProvider<MapVisits, int>(MapVisits.new);
 
 /// The Treasure Hunt Map (spec §5): a scrolling, winding trail built from
 /// the curriculum and the child's forward-only progress.
@@ -132,7 +122,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(mapVisitsProvider, (_, _) => _onVisit());
+    ref.listen(tabVisitProvider(0), (_, _) => _onVisit());
     final curriculum = ref.watch(curriculumProvider);
     final progress = ref.watch(progressProvider);
     final chapters = curriculum.value ?? const <Chapter>[];

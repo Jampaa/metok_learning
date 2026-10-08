@@ -105,4 +105,48 @@ void main() {
       expect(const UserProfile().copyWith(xp: 250).level, 3);
     });
   });
+
+  group('active days (butter lamps)', () {
+    test('each active day is listed once, newest last, at most 14', () {
+      var u = const UserProfile();
+      for (var d = 1; d <= 20; d++) {
+        u = GameRules.markActive(u, DateTime(2026, 10, d, 9));
+        u = GameRules.markActive(u, DateTime(2026, 10, d, 18));
+      }
+      expect(u.activeDates, hasLength(14));
+      expect(u.activeDates.last, '2026-10-20');
+      expect(u.streak.count, 20);
+    });
+    test('a scan marks today active', () {
+      final u = GameRules.recordScan(const UserProfile(),
+          isNewWord: true, now: DateTime(2026, 10, 9));
+      expect(u.activeDates, ['2026-10-09']);
+    });
+  });
+
+  group('daily quests', () {
+    test('defaults follow the daily goal', () {
+      final q = GameRules.defaultQuests(dailyGoal: 5);
+      expect(q.first.target, 5);
+      expect(q.first.goal, 'Find 5 things in the kitchen');
+      expect(q.map((e) => e.target).skip(1), [2, 30]);
+    });
+    test('scans move every quest, and stop at the target', () {
+      var q = GameRules.defaultQuests();
+      for (var i = 0; i < 4; i++) {
+        q = GameRules.questsAfterScan(q, isNewWord: i < 1);
+      }
+      expect(q.map((e) => e.progress), [3, 1, 30]);
+    });
+    test('claims only finished, unclaimed quests', () {
+      var q = GameRules.defaultQuests();
+      expect(GameRules.claim(q, GameRules.questFind), same(q));
+      for (var i = 0; i < 3; i++) {
+        q = GameRules.questsAfterScan(q, isNewWord: true);
+      }
+      final claimed = GameRules.claim(q, GameRules.questFind);
+      expect(claimed.first.claimed, isTrue);
+      expect(GameRules.claim(claimed, GameRules.questFind), same(claimed));
+    });
+  });
 }

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/map/map_screen.dart';
 import '../theme/layout.dart';
 import '../widgets/bottom_nav.dart';
 import '../widgets/stat_pills.dart';
 import 'routes.dart';
+import 'tab_visits.dart';
 
 /// The tab shell: the current tab's screen above the 88 px bottom nav, plus
 /// the streak and words pills on the Map and Backpack only (spec §5).
@@ -55,9 +55,7 @@ class AppShell extends ConsumerWidget {
               tabs: tabs,
               currentIndex: index,
               onSelect: (i) {
-                if (i == 0 && index != 0) {
-                  ref.read(mapVisitsProvider.notifier).visited();
-                }
+                if (i != index) ref.read(tabVisitsProvider.notifier).visited(i);
                 navigationShell.goBranch(i, initialLocation: i == index);
               },
               onScan: () => context.push(Routes.scan),

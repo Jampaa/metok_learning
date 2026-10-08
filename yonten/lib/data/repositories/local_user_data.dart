@@ -92,10 +92,22 @@ class LocalUserData implements UserDataRepository {
     await _saveProfile(after);
   }
 
+  List<QuestEntry>? _quests(String date) {
+    final v = _store.read(StoreKeys.localQuests(date));
+    if (v is! List) return null;
+    return [for (final e in v) QuestEntry.fromMap(Map<String, dynamic>.from(e as Map))];
+  }
+
   @override
   Future<void> recordScan(FoundWord word) async {
     final words = _list(StoreKeys.localWords);
     final isNew = !words.any((e) => e['id'] == word.id);
+    final today = dateKey(_now());
+    final quests = _quests(today) ??
+        GameRules.defaultQuests(dailyGoal: _profile.settings.dailyGoal);
+    await _store.write(StoreKeys.localQuests(today), [
+      for (final q in GameRules.questsAfterScan(quests, isNewWord: isNew)) q.toMap(),
+    ]);
     // A word's card shows the newest photo of it, so a re-find replaces
     // the old entry (the older photo stays in `photos`).
     final entry = {'id': word.id, ...word.toMap()};
@@ -140,6 +152,16 @@ class LocalUserData implements UserDataRepository {
   }
 
   @override
+  Future<void> claimQuest(String date, String questId) async {
+    final before = _quests(date);
+    if (before == null) return;
+    final after = GameRules.claim(before, questId);
+    if (identical(after, before)) return;
+    await _store.write(StoreKeys.localQuests(date), [for (final q in after) q.toMap()]);
+    await _saveProfile(_profile.copyWith(xp: _profile.xp + GameRules.questReward));
+  }
+
+  @override
   Future<void> saveQuests(String date, List<QuestEntry> quests) async {
     await _store.write(
         StoreKeys.localQuests(date), [for (final q in quests) q.toMap()]);
@@ -153,6 +175,10 @@ class LocalUserData implements UserDataRepository {
   @override
   Future<void> updateSettings(UserSettings settings) async =>
       _saveProfile(_profile.copyWith(settings: settings));
+
+  @override
+  Future<void> updateName(String name) async =>
+      _saveProfile(_profile.copyWith(displayName: name.trim()));
 
   @override
   Future<void> debugReset() async {
@@ -172,6 +198,7 @@ class LocalUserData implements UserDataRepository {
       progress: demoProgress,
       stats: Stats(words: words.length, lessons: demoProgress.completed.length),
       streak: Streak(count: 3, lastActiveDate: dateKey(_now())),
+      activeDates: demoActiveDates(_now()),
       xp: words.length * GameRules.xpPerWord,
     ));
   }

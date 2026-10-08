@@ -31,6 +31,7 @@ class _SquishableState extends State<Squishable> {
   Widget build(BuildContext context) {
     final enabled = widget.onTap != null;
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: widget.semanticLabel,

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../features/backpack/backpack_screen.dart';
 import '../features/gallery/gallery_screen.dart';
 import '../features/map/map_screen.dart';
+import '../features/profile/parent_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/quests/quests_screen.dart';
 import '../features/scanner/scanner_screen.dart';
@@ -38,6 +39,7 @@ GoRouter buildRouter({String? status}) => GoRouter(
           builder: (_, state) =>
               ScannerScreen(lessonId: state.uri.queryParameters['lesson']),
         ),
+        GoRoute(path: Routes.parents, builder: (_, _) => const ParentScreen()),
         GoRoute(
           path: Routes.gallery,
           builder: (_, _) => GalleryScreen(status: status),

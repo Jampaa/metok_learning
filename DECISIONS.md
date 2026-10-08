@@ -294,3 +294,52 @@ the owner renews it, scans still find objects in English, but no new word
 can be verified and no audio can be generated. Everything retries
 automatically once the quota is back. After that, rerun
 `seed_vocab.py`.
+
+## Phases 7 and 8
+
+**D46. Quest progress is written with each scan.** The scan transaction
+(or its offline fallback) also updates `quests/{today}`, so quests count
+the same online, offline and when queued scans catch up:
+- Find N things: +1 per find. Any find counts; the app can't tell what
+  room the child is in. N = the parent's daily goal (default 3).
+- Learn 2 new words: +1 the first time a word is found.
+- Earn 30 XP: +10 per find.
+
+Claiming gives +10 XP, which doesn't count toward the XP quest. Quests
+reset per local day; the app re-checks the date every 90 s.
+
+**D47. Active days for the butter lamps.** `users/{uid}.activeDates`
+keeps the last 14 local dates with a scan or finished lesson, updated
+with the streak. The "This week" card lights those days, Monday to
+Sunday.
+
+**D48. Transactions don't race a timer (fixes D31).** The offline
+fallback runs only after a transaction has failed. With a 3 s timer, a
+slow transaction that later committed was counted twice; the emulator
+check found it (4 hunts for 2 scans). Offline, a transaction fails fast,
+so the fallback still applies at once.
+
+**D49. Parent area.**
+- Hold-to-unlock uses raw pointer events. A gesture recognizer handed a
+  long hold to its long-press recognizer at 0.5 s and cancelled the
+  unlock. Moving the finger (scrolling) also cancels it. Screen readers
+  get a long-press action instead of a timed hold.
+- Settings: child's name (not in the spec, but the Me tab shows a name),
+  account linking (Google and Apple by popup on web, email with
+  `linkWithCredential`; same uid, so everything is kept), daily goal 1–10
+  (sets the find quest's target from the next new day), and sound on/off
+  (the audio service checks it).
+- Linking needs the Google, Apple and Email providers switched on in the
+  Firebase console, plus Apple's service setup. Until then the parent sees
+  "This sign-in method isn't switched on yet".
+
+**D50. Each tappable is its own accessibility node.** `ToyButton`,
+`Squishable`, the stat tiles, sticker slots, word cards and lamp days use
+`Semantics(container: true)`. Without it, screen readers merged
+neighbouring labels into one (found by the widget tests).
+
+**D51. Backpack details.** Unverified words show English only, and
+tapping them wiggles the card without playing audio. With no words yet,
+a friendly line invites the child to go find something. Sticker slots
+are fixed at 3 (`StickerCatalog`); the chorten is the first chest's
+sticker.

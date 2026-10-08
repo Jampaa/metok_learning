@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/curriculum_providers.dart';
+import '../data/day_providers.dart';
 import '../services/providers.dart';
 
 import '../theme/layout.dart';
@@ -117,6 +118,7 @@ class _BackgroundSyncState extends ConsumerState<_BackgroundSync> {
   Future<void> _sync() async {
     if (_running || !mounted) return;
     _running = true;
+    ref.read(todayProvider.notifier).refresh();
     try {
       final chapters = await ref.read(curriculumProvider.future);
       await ref.read(scanFlowProvider).sync(lessonsInOrder(chapters));

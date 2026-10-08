@@ -37,6 +37,7 @@ class StickerChip extends StatelessWidget {
       ),
     );
     return Semantics(
+      container: true,
       label: semanticLabel,
       excludeSemantics: true,
       child: tiltDegrees == 0

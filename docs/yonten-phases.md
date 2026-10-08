@@ -139,20 +139,22 @@ disagree. Each one gets logged in `DECISIONS.md` in Phase 0.
 
 ## Phase 7: Backpack and Quests (§5) — day 7
 
-- [ ] Backpack: each card shows only the child's own photo via `WordPhoto` (D37).
-- [ ] Backpack: the word grid from `users/{uid}/words` (newest first), rotations, staggered pop-in, tap to play audio with a wiggle, and the "Find more words" button.
-- [ ] Stickers row: earned stickers from map chests, plus dashed empty slots.
-- [ ] Quests: a daily document at `quests/{yyyy-mm-dd}` created on first open. Quest progress hooks from scans, lessons and XP.
-- [ ] Claim button behavior (breathing, the "Got it!" stamp, XP). Yonten peeks in.
+- [x] Backpack: each card shows only the child's own photo via `WordPhoto` (D37).
+- [x] Backpack: the word grid from `users/{uid}/words` (newest first), rotations, staggered pop-in, tap to play audio with a wiggle, and the "Find more words" button.
+- [x] Stickers row: earned stickers from map chests, plus dashed empty slots.
+- [x] Quests: a daily document at `quests/{yyyy-mm-dd}` created on first open. Quest progress hooks from scans, lessons and XP.
+- [x] Claim button behavior (breathing, the "Got it!" stamp, XP). Yonten peeks in.
 
 **Done when:** a scan shows up in the Backpack, moves its quests forward, and a claim adds XP. The next day's quests reset.
 
 ## Phase 8: Profile and parent area (§5 Me) — day 8
 
-- [ ] Avatar ring, name, level ribbon, and the 2 × 2 stats grid.
-- [ ] "This week" butter lamps: flickering flames, today's lamp lighting up, missed days dimmed.
-- [ ] The 1.5 s hold-to-unlock parent gate.
-- [ ] Parent settings: link Google, Apple or email (`linkWithCredential`), daily goal, sound on/off, and the photo-keeping permission (used by Phase 6).
+- [x] Avatar ring, name, level ribbon, and the 2 × 2 stats grid.
+- [x] "This week" butter lamps: flickering flames, today's lamp lighting up, missed days dimmed.
+- [x] The 1.5 s hold-to-unlock parent gate.
+- [x] Parent settings: link Google, Apple or email (`linkWithCredential`), daily goal, sound on/off, and the photo-keeping permission (used by Phase 6).
+
+- [ ] **(Owner)** Turn on the Google, Apple and Email sign-in providers in the Firebase console (Apple also needs its service ID and key) so linking works (D49).
 
 **Done when:** linking an account keeps all progress, and the lamps match the real streak.
 

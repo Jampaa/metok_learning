@@ -30,6 +30,7 @@ Future<ProviderContainer> pumpYonten(
   KeyValueStore? store,
   bool demo = false,
   List<ScanOutcome>? scans,
+  AudioService audio = const SilentAudioService(),
 }) async {
   tester.view.physicalSize = const Size(400, 800);
   tester.view.devicePixelRatio = 1;
@@ -40,7 +41,7 @@ Future<ProviderContainer> pumpYonten(
   }
   final c = ProviderContainer(overrides: [
     backendProvider.overrideWithValue(Backend(store: s)),
-    audioServiceProvider.overrideWithValue(const SilentAudioService()),
+    audioServiceProvider.overrideWithValue(audio),
     captureSourceFactoryProvider.overrideWithValue(FakeCapture.new),
     if (scans != null)
       visionServiceProvider.overrideWith(
@@ -84,3 +85,17 @@ class FakeCapture extends CaptureSource {
 const verifiedApple = ScanFound(ScanWord(
     id: 'apple', english: 'apple', tibetan: 'ཀུ་ཤུ', verified: true,
     audioUrl: 'https://example.com/apple.wav'));
+
+/// Remembers which words were asked to play.
+class RecordingAudio implements AudioService {
+  final played = <String?>[];
+
+  @override
+  Future<void> playWord(String? wordId, {String? url}) async => played.add(wordId);
+}
+
+/// Taps a bottom-nav tab and lets its screen settle.
+Future<void> openTab(WidgetTester tester, String label) async {
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}

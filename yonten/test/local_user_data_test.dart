@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:yonten/data/curriculum_providers.dart';
 import 'package:yonten/data/local_store.dart';
+import 'package:yonten/data/models/user_profile.dart';
 import 'package:yonten/data/models/word.dart';
 import 'package:yonten/data/repositories/local_user_data.dart';
 
@@ -70,5 +71,39 @@ void main() {
     final q = await repo.watchQuests('2026-10-05').first;
     expect(q!.single.progress, 1);
     expect(await repo.watchQuests('2026-10-06').first, isNull);
+  });
+
+  test('scans update today\'s quests; a claim adds XP once', () async {
+    final repo = LocalUserData(MemoryStore(), clock: clock);
+    for (final id in ['a', 'b', 'c']) {
+      await repo.recordScan(word(id));
+    }
+    final q = (await repo.watchQuests('2026-10-05').first)!;
+    expect(q.map((e) => e.progress), [3, 2, 30]);
+    expect(q.every((e) => e.complete), isTrue);
+
+    await repo.claimQuest('2026-10-05', 'find');
+    await repo.claimQuest('2026-10-05', 'find');
+    final p = await repo.watchProfile().first;
+    expect(p.xp, 30 + 10);
+    expect((await repo.watchQuests('2026-10-05').first)!.first.claimed, isTrue);
+  });
+
+  test('the next day starts fresh quests', () async {
+    var now = DateTime(2026, 10, 5, 10);
+    final store = MemoryStore();
+    await LocalUserData(store, clock: () => now).recordScan(word('a'));
+    now = DateTime(2026, 10, 6, 8);
+    expect(await LocalUserData(store, clock: () => now).watchQuests('2026-10-06').first, isNull);
+  });
+
+  test('name and settings are saved', () async {
+    final repo = LocalUserData(MemoryStore());
+    await repo.updateName('  Tenzin ');
+    await repo.updateSettings(const UserSettings(sound: false, dailyGoal: 5));
+    final p = await repo.watchProfile().first;
+    expect(p.displayName, 'Tenzin');
+    expect(p.settings.sound, isFalse);
+    expect(p.settings.dailyGoal, 5);
   });
 }

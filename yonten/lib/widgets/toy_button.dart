@@ -83,6 +83,7 @@ class _ToyButtonState extends State<ToyButton> {
     );
 
     return Semantics(
+      container: true,
       button: true,
       enabled: enabled,
       label: widget.semanticLabel,
