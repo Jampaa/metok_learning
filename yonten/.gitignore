@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Image pack input (only processed assets/images/ is bundled) and tool venv
+/assets/raw/
+/tools/.venv/

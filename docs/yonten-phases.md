@@ -52,13 +52,13 @@ disagree. Each one gets logged in `DECISIONS.md` in Phase 0.
 
 **Goal:** every visual building block exists before any screen does.
 
-- [ ] Copy the image pack into `yonten/assets/raw/` (input only, git-ignored or LFS).
-- [ ] Write `tools/prep_images.py` (§3, steps 1–7): shared pose crop, avatar crop, peek crop, scene bounding-box crops, lamp split with the flame flood-fill, icons, and the paper-grain tile. Output goes to `assets/images/*.webp`.
-- [ ] Bundle the Grandstander, Andika and Jomolhari fonts (OFL).
-- [ ] Create `theme/colors.dart` and `theme/text.dart` with exactly the §4 tokens. Create `theme/motion.dart` as an empty home for durations and curves.
-- [ ] Build the widgets `ToyButton`, `ToyCard` (70 ms pressed state, constant height), `StickerChip`, `SegmentedProgress` and `PaperGrain` (with the debug toggle).
-- [ ] Draw the missing art in `InkIcons` (§3 "Missing images"), named so it can be swapped for real files later.
-- [ ] Build a hidden `/gallery` route that shows every widget and icon.
+- [x] Copy the image pack into `yonten/assets/raw/` (input only, git-ignored or LFS).
+- [x] Write `tools/prep_images.py` (§3, steps 1–7): shared pose crop, avatar crop, peek crop, scene bounding-box crops, lamp split with the flame flood-fill, icons, and the paper-grain tile. Output goes to `assets/images/*.webp`.
+- [x] Bundle the Grandstander, Andika and Jomolhari fonts (OFL).
+- [x] Create `theme/colors.dart` and `theme/text.dart` with exactly the §4 tokens. Create `theme/motion.dart` as an empty home for durations and curves.
+- [x] Build the widgets `ToyButton`, `ToyCard` (70 ms pressed state, constant height), `StickerChip`, `SegmentedProgress` and `PaperGrain` (with the debug toggle).
+- [x] Draw the missing art in `InkIcons` (§3 "Missing images"), named so it can be swapped for real files later.
+- [x] Build a hidden `/gallery` route that shows every widget and icon.
 
 **Done when:** the gallery renders every token, widget and processed image, and pose frames overlay with no visible jump.
 

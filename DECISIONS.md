@@ -59,3 +59,30 @@ Phase 11 (bundle id `org.gtpn.yonten`).
 widgets are fine to use. `cupertino_icons` is removed, and no `Icons.*`
 glyphs are used (spec §4 bans default icon sets). Icons come from
 `InkIcons` and the image pack.
+
+## Phase 1
+
+**D13. Avatar crop.** The spec's avatar crop `(152, 140, 872, 860)` cuts
+off the top of Yonten's hair tuft, whose top edge is at y 133. We use
+`(152, 126, 872, 846)`: the same 720 px square, moved up 14 px.
+
+**D14. Placeholder art colors.** The palette has no green, so the
+`obj-apple` leaf uses yellowDark `#D1A507`. The `obj-door` frame uses
+mutedStrong `#3D4357`, standing in for the black trapezoid frame of a
+Tibetan doorway. All drawn glyphs are named after the file the brief
+expects (`icon-book`, `obj-apple`, ...), so real art can replace them one
+by one.
+
+**D15. Progress ticks.** `SegmentedProgress` draws one tick per step up to
+10 steps. Larger targets, such as 30 XP, get 10 evenly spaced ticks so the
+bar stays readable.
+
+**D16. Gallery as home screen.** Until Phase 2 adds routing, the app opens
+on the developer gallery. In Phase 2 it moves to a hidden `/gallery`
+route.
+
+**D17. Lamp flame extraction.** Pillow 12's `ImageDraw.floodfill` did
+nothing on the single-channel alpha mask, so `prep_images.py` finds the
+flame by growing a region with numpy instead (repeated 4-neighbor
+dilation, limited to y < 362). The result is the same as the spec's flood
+fill: flame and wick only, no sparkles.

@@ -1,8 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'features/gallery/gallery_screen.dart';
 import 'firebase_options.dart';
+import 'theme/text.dart';
+import 'widgets/paper_grain.dart';
 
 /// Phase 0 bootstrap: connect to Firebase and sign the child in anonymously.
 /// If Firebase isn't reachable, the app still opens in local mode (AGENTS.md:
@@ -10,7 +14,7 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final status = await _bootstrap();
-  runApp(YontenApp(status: status));
+  runApp(ProviderScope(child: YontenApp(status: status)));
 }
 
 Future<String> _bootstrap() async {
@@ -40,18 +44,9 @@ class YontenApp extends StatelessWidget {
     return MaterialApp(
       title: 'Yonten',
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Yonten', style: TextStyle(fontSize: 32)),
-              const SizedBox(height: 12),
-              Text(status),
-            ],
-          ),
-        ),
-      ),
+      theme: yontenTheme(),
+      builder: (context, child) => PaperGrain(child: child!),
+      home: GalleryScreen(status: status),
     );
   }
 }
