@@ -86,3 +86,35 @@ nothing on the single-channel alpha mask, so `prep_images.py` finds the
 flame by growing a region with numpy instead (repeated 4-neighbor
 dilation, limited to y < 362). The result is the same as the spec's flood
 fill: flame and wick only, no sparkles.
+
+## Phase 2
+
+**D18. Active tab label contrast.** The spec sets the active tab label to
+#1A8AC1, which is only about 3.9:1 on white, below the spec's own 4.5:1
+rule. For now we follow the visual spec. The active state is also shown
+by the blue tile, so color isn't the only cue. Phase 9's accessibility
+audit decides whether to darken it.
+
+**D19. Reduced motion lives in one place.** `ReducedMotionScope` at the
+app root combines `MediaQuery.disableAnimations` with a debug override
+(the gallery toggle). Every looping animation goes through `LoopBuilder`,
+and the blink clock and nav hop check the same scope, so one switch stops
+all motion. Under reduced motion, frame sequences jump straight to their
+end state.
+
+**D20. Pose motion pivots.** Explore sways around (50%, 95%), as in the
+spec. Think tilts around (50%, 60%), roughly Yonten's neck, so it reads
+as a head tilt rather than a whole-body sway.
+
+**D21. Scanner and gallery are full-screen routes** outside the tab
+shell, so the nav is hidden there. Close pops back to the tab you came
+from. The gallery is reachable only by URL: `/#/gallery`.
+
+**D22. Placeholder numbers.** Until Phase 4 the pills show 3-day streak
+and 4 words (`headerStatsProvider`), and the Me tab shows "Explorer" as
+the name.
+
+**D23. UI Tibetan strings.** Screen titles (རྒྱབ་ཁུར།, ཉིན་རེའི་ལས་འགན།,
+མིག་འཕྲུལ།) are copied verbatim from the spec. They're UI labels, not
+vocabulary, but they still go on the fluent-speaker check list with the
+seed words (D4).

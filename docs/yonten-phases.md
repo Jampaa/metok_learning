@@ -64,11 +64,11 @@ disagree. Each one gets logged in `DECISIONS.md` in Phase 0.
 
 ## Phase 2: App shell and Yonten (§5 shell, §6 Yonten rows) — day 2
 
-- [ ] `go_router` with the five tabs and the 88 px bottom nav. Center Scan button, active-tile style, 7 px icon hop.
-- [ ] Streak and words pills on the Map and Backpack screens (static values for now).
-- [ ] The web layout: a centered 430 px column, reference-px scaling on phones.
-- [ ] `YontenSprite`: stacks every frame, `precacheImage` at startup, the global blink clock (3.5–6 s), breathing, and the wave sequence.
-- [ ] Reduced motion: one provider reads `MediaQuery.disableAnimations` and every looping animation listens to it.
+- [x] `go_router` with the five tabs and the 88 px bottom nav. Center Scan button, active-tile style, 7 px icon hop.
+- [x] Streak and words pills on the Map and Backpack screens (static values for now).
+- [x] The web layout: a centered 430 px column, reference-px scaling on phones.
+- [x] `YontenSprite`: stacks every frame, `precacheImage` at startup, the global blink clock (3.5–6 s), breathing, and the wave sequence.
+- [x] Reduced motion: one provider reads `MediaQuery.disableAnimations` and every looping animation listens to it.
 
 **Done when:** all five tabs navigate, Yonten blinks and waves with no flicker, and reduced motion stops every loop.
 

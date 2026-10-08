@@ -18,6 +18,7 @@ class ToyButton extends StatefulWidget {
     this.radius = 16,
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     this.expand = false,
+    this.border = 2,
   }) : assert(child != null || label != null);
 
   /// Read by screen readers. Required: every tappable has a label (§4).
@@ -34,6 +35,9 @@ class ToyButton extends StatefulWidget {
 
   /// Stretch to the full available width.
   final bool expand;
+
+  /// Outline width (the shutter and Scan button use 2.5–3 px).
+  final double border;
 
   @override
   State<ToyButton> createState() => _ToyButtonState();
@@ -67,6 +71,7 @@ class _ToyButtonState extends State<ToyButton> {
       circle: widget.circle,
       radius: widget.radius,
       pressed: _pressed,
+      border: widget.border,
       padding: widget.padding,
       child: Center(widthFactor: widget.expand ? null : 1, child: content),
     );

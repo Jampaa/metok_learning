@@ -1,15 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'features/gallery/gallery_screen.dart';
+import 'app/app.dart';
 import 'firebase_options.dart';
-import 'theme/text.dart';
-import 'widgets/paper_grain.dart';
 
-/// Phase 0 bootstrap: connect to Firebase and sign the child in anonymously.
-/// If Firebase isn't reachable, the app still opens in local mode (AGENTS.md:
+/// Connect to Firebase and sign the child in anonymously. If Firebase
+/// isn't reachable, the app still opens in local mode (AGENTS.md:
 /// unconfigured services must never break the screen).
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,22 +29,5 @@ Future<String> _bootstrap() async {
     return 'Signed in: ${user?.uid ?? 'unknown'}';
   } catch (e) {
     return 'Local mode (anonymous sign-in unavailable)';
-  }
-}
-
-class YontenApp extends StatelessWidget {
-  const YontenApp({super.key, required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Yonten',
-      debugShowCheckedModeBanner: false,
-      theme: yontenTheme(),
-      builder: (context, child) => PaperGrain(child: child!),
-      home: GalleryScreen(status: status),
-    );
   }
 }

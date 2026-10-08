@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../theme/colors.dart';
 import '../../theme/text.dart';
 import '../../widgets/ink_icons.dart';
+import '../../widgets/motion_scope.dart';
 import '../../widgets/paper_grain.dart';
 import '../../widgets/segmented_progress.dart';
 import '../../widgets/squishable.dart';
@@ -12,7 +13,7 @@ import '../../widgets/toy_button.dart';
 import '../../widgets/toy_card.dart';
 
 /// Developer gallery: every design token, widget and processed image in one
-/// scrollable page. Becomes the hidden `/gallery` route in Phase 2.
+/// scrollable page. Hidden route: open `/#/gallery` in the browser.
 class GalleryScreen extends ConsumerWidget {
   const GalleryScreen({super.key, this.status});
 
@@ -35,6 +36,7 @@ class GalleryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final grainOn = ref.watch(paperGrainEnabledProvider);
+    final reduced = ref.watch(reducedMotionOverrideProvider);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -54,6 +56,14 @@ class GalleryScreen extends ConsumerWidget {
                   color: YColors.white,
                   onPressed: () =>
                       ref.read(paperGrainEnabledProvider.notifier).toggle(),
+                ),
+                const SizedBox(height: 10),
+                ToyButton(
+                  semanticLabel: 'Toggle reduced motion',
+                  label: reduced ? 'Reduced motion: on' : 'Reduced motion: off',
+                  color: YColors.white,
+                  onPressed: () =>
+                      ref.read(reducedMotionOverrideProvider.notifier).toggle(),
                 ),
                 _section('Colors'),
                 const _Swatches(),
